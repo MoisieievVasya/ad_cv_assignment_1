@@ -568,3 +568,20 @@ within ± 2 of 37.9.
 **H7.2.** Averaging three seeds of the same model removes only the seed variance (std 0.3–0.7).
 *Prediction:* the seed-averaged OOF of ResNet-18 SGD and of the scratch ViT is 0.3–1.5 better than the
 mean of their single seeds, which is far less than averaging across families (H7: 2–4).
+
+**H3.2 — CKA result** (fold 0, 256 held-out tiles, linear CKA of each block's mean token, DINOv2-S
+before vs after tuning; `notebooks/01_results_parts_1_3.ipynb`, `reports/fig_cka.png`):
+
+| | block 1 | 4 | 6 | 8 | 10 | 12 |
+|---|---|---|---|---|---|---|
+| full FT | 1.00 | 0.99 | 0.94 | 0.83 | 0.61 | **0.43** |
+| LP-FT | 1.00 | 1.00 | 0.98 | 0.92 | 0.85 | **0.75** |
+| LoRA r=8 | 1.00 | 0.94 | 0.77 | 0.65 | 0.54 | **0.38** |
+
+Predictions: blocks 1–4 > 0.9 for all ✓; last block < 0.6 after full FT ✓ (0.43); > 0.75 after LP-FT
+(0.745, borderline ✓) and after LoRA ✗ (0.38). **Why LoRA moved the representation most:** it was
+trained with a 10× larger LR (2e-4, the usual LoRA setting) and updates q/k/v in *every* block, so
+attention patterns change throughout the depth even with only 0.15 M trainable parameters. LP-FT,
+starting from a fitted head with a 1e-5 LR, keeps the representation closest to the pretrained one,
+and it is the best DINOv2 tuning (43.1). That is the LP-FT argument: the less the features are
+distorted, the better on 19 samples.

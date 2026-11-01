@@ -59,7 +59,7 @@ for i, s in enumerate(show):
         hm = photo_map(model, img, cfg, mean, std, device, method)
         axes[i, j].imshow(img); axes[i, j].imshow(hm, cmap="jet", alpha=.45)
         axes[i, j].set_title(f"{title}: EMD {oof[title].loc[s, 'emd']:.0f}", fontsize=8)
-    hm = photo_map(*dino[:2], dino[2], dino[3], device, "rollout")
+    hm = photo_map(dino[0], img, dino[1], dino[2], dino[3], device, "rollout")
     axes[i, -1].imshow(img); axes[i, -1].imshow(hm, cmap="jet", alpha=.45); axes[i, -1].set_title("DINOv2-S rollout", fontsize=8)
 for a in axes.ravel():
     a.set_xticks([]); a.set_yticks([])
@@ -126,7 +126,8 @@ for k in sorted(fold_of.unique()):
     tr_ph = ph[ph.sample_id.map(fold_of) != k]
     cam_curve = tr_ph.groupby("camera").sample_id.apply(lambda s: lab.loc[s, COLS].to_numpy(float).mean(0))
     for s in fold_of.index[fold_of == k]:
-        pred[s] = np.mean([cam_curve[c] for c in ph[ph.sample_id == s].camera], 0)
+        overall = lab.loc[tr_ph.sample_id.unique(), COLS].to_numpy(float).mean(0)  # phone unseen in training
+        pred[s] = np.mean([cam_curve[c] if c in cam_curve.index else overall for c in ph[ph.sample_id == s].camera], 0)
 dev = pd.DataFrame(pred, index=COLS).T
 _, pf = fold_scores(dev, labels, folds)
 print(f"device-mean-curve predictor: CV {pf.mean():.1f} ± {pf.std(ddof=0):.1f}   (plain mean curve: 93.4)")
