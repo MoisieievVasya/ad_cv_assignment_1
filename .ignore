@@ -1,0 +1,5 @@
+# Skipped by ripgrep (and so by Claude Code's Grep/Glob); still tracked by git.
+# The executed notebooks are ~1 MB of base64 figures — search notebooks/src/*.py instead.
+notebooks/*.ipynb
+uv.lock
+.idea/
