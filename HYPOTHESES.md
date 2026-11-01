@@ -716,3 +716,9 @@ mix and does not transfer across devices. White balance removes the cast but kee
 standard CV and is ≥ 2 better than the baseline on cross-device CV. Greyscale is ≥ 5 worse than the
 baseline on standard CV and no better than grey-world cross-device.
 **Use.** This block is analysis: the final submission (rule fixed in Block 7) does not change.
+
+**H2.7 addendum — reproducibility of nested early stopping.** The same ViT-S nested recipe re-run as a final
+model (`final_vits_nested`, new seeds for the inner models) chose epochs 9, 2, 1, 1, 7 (first run: 8, 1, 1, 1, 4)
+and scored **43.4** instead of 39.6. Repeating the selection moves the result by ~4 EMD, much more than seed
+noise of plain training (0.2–0.7). The −8 gain of H2.7 is therefore partly luck of the inner split. The
+robust part of the finding is the direction: stopping early helps a pretrained ViT, by 4–8 EMD.

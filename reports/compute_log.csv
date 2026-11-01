@@ -104,6 +104,7 @@ final,final_tinyvit_scratch,NVIDIA GeForce RTX 5070 Laptop GPU,0.142,0.142,0.378
 final,final_tinyvit_scratch_s1,NVIDIA L4,0.162,0.162,0.388
 final,final_tinyvit_scratch_s2,NVIDIA L4,0.1613,0.1613,0.388
 final,final_vits,NVIDIA GeForce RTX 5070 Laptop GPU,0.4539,0.4539,1.531
+final,final_vits_nested,NVIDIA A100-SXM4-40GB,0.4772,0.4772,1.719
 rep,rep_p2_tinyvit_scratch_s1,NVIDIA L4,0.1576,0.1576,0.388
 rep,rep_p2_tinyvit_scratch_s2,NVIDIA L4,0.1573,0.1573,0.388
 rep,rep_p3_dinov3_s_ft_s1,NVIDIA L4,0.3714,0.3714,1.853

@@ -143,6 +143,7 @@ Mean-curve baseline 93.4, uniform curve 102.
 | final_r18_sgd_s2 | 37.46 ± 14.84 | 36.19 |  |  | 0.202 | NVIDIA L4 |
 | final_r18_sgd_s1 | 37.57 ± 14.16 | 36.23 |  |  | 0.203 | NVIDIA L4 |
 | final_mae_b_lpft | 40.82 ± 15.53 | 39.44 |  |  | 0.254 | NVIDIA A100-SXM4-40GB |
+| final_vits_nested | 43.42 ± 15.07 | 42.22 |  |  | 0.477 | NVIDIA A100-SXM4-40GB |
 | final_vits | 47.77 ± 19.10 | 44.42 |  |  | 0.454 | NVIDIA GeForce RTX 5070 Laptop GPU |
 
 ## Seed replicates (noise floor)
