@@ -1,0 +1,9 @@
+# H1.8: the two best CNN knobs together — SGD + GroupNorm (with --test, may join the ensemble).
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+part: "1"
+experiments:
+  - {name: p1_r18_sgd_gn, arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, norm: gn}

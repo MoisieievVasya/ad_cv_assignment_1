@@ -560,3 +560,11 @@ monitor shows frozen-ridge OOF EMD rising from 45.3 / 44.5 to 48.4 / 47.2 as soo
 starts training. Scale-preserving views make that shortcut *easier* (same scale, same tray), which
 is why they hurt slightly more than standard multi-crop. Verdict: DA made every score worse by 1–4 EMD
 at ~0.1 L4-hours per run.
+
+### H1.8 / H7.2 — combining findings for the final models (written before these runs)
+**H1.8.** SGD (37.9) and GroupNorm (38.4) both help ResNet-18 by slowing memorisation of the training
+samples; they act on the same mechanism, so they are not additive. *Prediction:* ResNet-18 SGD + GN lands
+within ± 2 of 37.9.
+**H7.2.** Averaging three seeds of the same model removes only the seed variance (std 0.3–0.7).
+*Prediction:* the seed-averaged OOF of ResNet-18 SGD and of the scratch ViT is 0.3–1.5 better than the
+mean of their single seeds, which is far less than averaging across families (H7: 2–4).

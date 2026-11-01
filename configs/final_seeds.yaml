@@ -1,0 +1,13 @@
+# Seed copies of the two best final models (with --test): the final test prediction of each is the average
+# of seeds 0/1/2. Its CV is measured on the averaged OOF of the matching replicate runs (rep_*).
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+part: "final"
+experiments:
+  - {name: final_r18_sgd_s1, arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, seed: 1}
+  - {name: final_r18_sgd_s2, arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, seed: 2}
+  - {name: final_tinyvit_scratch_s1, arch: tiny_vit, pretrained: false, input_px: 224, optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2, seed: 1}
+  - {name: final_tinyvit_scratch_s2, arch: tiny_vit, pretrained: false, input_px: 224, optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2, seed: 2}
