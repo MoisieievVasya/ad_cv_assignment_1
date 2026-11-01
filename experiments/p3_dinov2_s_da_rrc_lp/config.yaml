@@ -1,0 +1,9 @@
+encoder: dinov2_s
+weights: checkpoints/dino_adapt_dinov2_s_rrc.pt
+tile_mm: 50
+input_px: 224
+features: CLS + mean patch token; sample = mean and std over tiles
+method: linear probe (tile-level softmax head, EMD loss)
+epochs: 200
+lr: 0.01
+wd: 0.001

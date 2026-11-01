@@ -1,0 +1,20 @@
+{
+  "name": "p1_r18_frozenbn",
+  "part": "1",
+  "cv_mean": 44.038,
+  "cv_std": 14.797,
+  "oof_emd": 41.874,
+  "folds": [
+    63.755,
+    57.862,
+    25.465,
+    41.934,
+    31.172
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0911,
+    "gpu_hours": 0.0911,
+    "peak_mem_gb": 0.658
+  }
+}

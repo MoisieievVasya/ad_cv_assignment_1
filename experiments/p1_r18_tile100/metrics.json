@@ -1,0 +1,20 @@
+{
+  "name": "p1_r18_tile100",
+  "part": "1",
+  "cv_mean": 46.471,
+  "cv_std": 18.473,
+  "oof_emd": 42.77,
+  "folds": [
+    60.439,
+    73.581,
+    22.381,
+    43.056,
+    32.899
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.2758,
+    "gpu_hours": 0.2758,
+    "peak_mem_gb": 1.051
+  }
+}
