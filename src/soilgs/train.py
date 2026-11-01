@@ -192,7 +192,12 @@ def get_device():
 
 
 def amp_dtype():
-    return torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+    """bf16 only where the hardware has it (compute capability >= 8: A100, L4, RTX 30xx+). On a T4 (7.5)
+    `is_bf16_supported()` can still return True because of emulation, which is many times slower: use fp16
+    (+ GradScaler) there."""
+    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+        return torch.bfloat16
+    return torch.float16
 
 
 def lr_factor(step, total, warmup, schedule):
