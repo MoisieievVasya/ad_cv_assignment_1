@@ -1,0 +1,20 @@
+{
+  "name": "p2_swin_t",
+  "part": "2",
+  "cv_mean": 44.347,
+  "cv_std": 16.658,
+  "oof_emd": 41.485,
+  "folds": [
+    65.581,
+    61.739,
+    22.231,
+    38.173,
+    34.012
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.2642,
+    "gpu_hours": 0.2642,
+    "peak_mem_gb": 2.799
+  }
+}
