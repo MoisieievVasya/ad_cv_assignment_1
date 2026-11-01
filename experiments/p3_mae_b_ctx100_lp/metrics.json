@@ -1,0 +1,20 @@
+{
+  "name": "p3_mae_b_ctx100_lp",
+  "part": "3",
+  "cv_mean": 63.02,
+  "cv_std": 6.078,
+  "oof_emd": 63.031,
+  "folds": [
+    74.045,
+    59.681,
+    60.525,
+    56.404,
+    64.444
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0006,
+    "gpu_hours": 0.0006,
+    "peak_mem_gb": 0.031
+  }
+}

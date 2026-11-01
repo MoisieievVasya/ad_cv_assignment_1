@@ -1,0 +1,21 @@
+{
+  "name": "p3_dinov2_s_ctx100_frozen_knn",
+  "part": "3",
+  "cv_mean": 50.9,
+  "cv_std": 19.159,
+  "oof_emd": 48.838,
+  "folds": [
+    67.494,
+    53.621,
+    22.064,
+    74.043,
+    37.278
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0,
+    "gpu_hours": 0.0,
+    "peak_mem_gb": 0.0,
+    "feature_hours": 0.0
+  }
+}

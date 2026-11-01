@@ -426,3 +426,11 @@ which a 50 mm tile already contains (cf. H0.4).
 **Prediction.** Pretrained ViT-S, DINOv3-S FT and MAE-B LP-FT each improve by ≥ 3 EMD at 100 mm;
 ResNet-18 SGD and the scratch ViT change by < 2. MAE-B LP-FT at 100 mm becomes the best single model
 (≤ 37). Cost ≈ 3–4× the 50 mm runs.
+
+**H3.5 follow-up — the other frozen encoders at 100 mm / 448 px** (nested ridge, site folds):
+DINOv2-S 49.0 → **42.3**, DINOv3-S 45.8 → 46.5, MAE-B 45.1 → 44.3. The context gain is
+DINOv2-specific, not a general property of pretrained transformers. A plausible reason is the
+positional embeddings: DINOv2 was pretrained at 518 px (37 × 37 patches) and is interpolated *down*
+to 16 × 16 for 224 px inputs, while DINOv3 and MAE were trained at 224 px. Then 448 px input moves
+DINOv2 closer to its training resolution but moves the others away from theirs. Not tested further.
+This weakens H2.8's prediction for DINOv3 and MAE, which was written before these numbers.
