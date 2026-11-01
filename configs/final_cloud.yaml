@@ -1,0 +1,14 @@
+# Final models trained in the cloud with --test: OOF for CV + a model fitted on all 24 samples for the test
+# set, so they can join the Part 7 ensemble. Recipes identical to p3_mae_b_lpft and p2_vits_nested; the
+# all-data ViT-S stops at the median of the epochs its outer folds chose.
+tile_mm: 50
+input_px: 224
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+weight_decay: 0.05
+optimizer: adamw
+experiments:
+  - {name: final_mae_b_lpft, part: "final", arch: vit_base_patch16_224.mae, lr: 1.0e-5, llrd: 0.75, drop_path: 0.1, lp_epochs: 3, lp_lr: 1.0e-3}
+  - {name: final_vits_nested, part: "final", arch: vit_small_patch16_224.augreg_in21k_ft_in1k, lr: 1.0e-4, llrd: 0.75, drop_path: 0.1, epoch_selection: nested, inner_folds: 3}
