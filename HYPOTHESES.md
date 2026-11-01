@@ -598,3 +598,45 @@ whose centroid is ≥ 0.15 below it (so it is out of range, as Münster is), the
 texture ridge alone vs texture ridge + guard.
 **Prediction.** The guard improves those held-out samples by ≥ 3 EMD on average and on ≥ 3 of 5. If not,
 it is **not** used in the final submission.
+
+### H6c — result (`scripts/check_guard.py`, `reports/guard_check.csv`)
+Leave-coarsest-out on the 5 coarsest training samples (each out of range by 0.17–0.44): texture ridge
+alone 34.1–65.8 EMD; with the guard 24.2–42.2; **mean gain 16.1, 5 of 5 improved → the guard is used**
+(rule fixed in H6c). In the test set it activates only for the Münster sample (w = 1.0); the other 9
+test samples are unchanged. Caveat: Münster is further out of range (0.64) than any checked case, so
+the size of its correction is an extrapolation of an extrapolation.
+
+### Block 4 — results (`notebooks/04_interpretation.ipynb`, `reports/fig_maps.png`, `reports/controls_part4.csv`)
+Held-out fold models; EMD without TTA (so the "original" row is ~1.5 below the CV numbers).
+
+| input | ResNet-18 SGD | scratch ViT | ViT-S |
+|---|---|---|---|
+| original | 34.8 | 35.1 | 44.4 |
+| tile replaced by its mean colour | 91.9 (+57) | 96.5 (+61) | 103.0 (+59) |
+| greyscale | 46.2 (+11.4) | 50.8 (+15.7) | 46.9 (+2.5) |
+| shuffle 4 × 4 (12.5 mm pieces) | +0.8 | +0.4 | −0.6 |
+| shuffle 8 × 8 (6 mm pieces) | +1.5 (gravelly +2.6) | +0.2 (+0.3) | +1.1 (+2.0) |
+| central tiles only / border tiles only | −0.3 / +0.1 | +1.5 / −0.1 | −1.2 / +0.3 |
+
+Ridge on 6 Lab colour statistics alone: **43.8**; DoG texture alone 41.8; both 38.2. Device-mean-curve
+predictor 93.0 (= mean curve 93.4).
+
+| | Prediction | Verdict |
+|---|---|---|
+| H4.1 maps | CNN on gravel clasts; pretrained ViTs on a few high-contrast spots | CNN Grad-CAM: individual grains and clast edges/shadows, also on fine soils ✓/✗; scratch ViT: diffuse over the whole texture; ViT-S and DINOv2: small bright specks, large clasts *dark* ✓ |
+| H4.2 colour | colour ridge 45–55; mean-colour input: scratch ViT ≤ +10, ResNet ≥ +15; greyscale: scratch ≥ +5, ResNet ≤ +3 | colour ridge **43.8** (stronger than predicted); mean-colour input destroys every model (**wrong**: no model works from colour alone); greyscale: scratch +15.7 ✓, ResNet +11.4 ✗ |
+| H4.3 layout | 4 × 4 shuffle ≤ 3 ✓; 8 × 8 ≥ 5 on gravelly | 8 × 8 only +0.3 to +2.6 (**wrong**) |
+| H4.4 tray position | border ≥ 3 worse than centre | within ± 1.5 (**wrong**) |
+| H4.5 device | ≥ 85 | 93.0 ✓ (no device shortcut) |
+
+**Conclusion on shortcuts.** (1) *No layout, tray-edge or device shortcut:* shuffling 6–12.5 mm pieces,
+taking only border or only central tiles, or knowing the phone changes nothing. The models read
+**local texture statistics**, the same thing the hand-crafted DoG features measure. (2) *Colour is a
+real, large signal and the models use it jointly with texture:* colour alone predicts 43.8; removing it
+costs the ResNet 11 and the scratch ViT 16 EMD; colour without texture is useless to them (+57–61, also
+far out of distribution). Colour is physically linked to the target (clay/silt content, moisture), but it
+is also the most likely thing to change between sites, phones and lighting. That makes it the main
+transfer risk to the test set (new sites, iPhones), and it explains why the pretrained ViT-S, which
+depends least on colour (+2.5), is not hurt by greyscale. (3) The maps of the failures (H038 gravel under a
+fine surface, H616 clean sand) look like those of successes: nothing in the surface tells the model
+what is underneath. This is a limit of the input, not a shortcut.
