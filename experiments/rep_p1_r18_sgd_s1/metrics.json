@@ -1,0 +1,20 @@
+{
+  "name": "rep_p1_r18_sgd_s1",
+  "part": "1",
+  "cv_mean": 38.266,
+  "cv_std": 15.003,
+  "oof_emd": 36.816,
+  "folds": [
+    60.6,
+    47.619,
+    21.971,
+    39.38,
+    21.76
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.118,
+    "gpu_hours": 0.118,
+    "peak_mem_gb": 0.612
+  }
+}
