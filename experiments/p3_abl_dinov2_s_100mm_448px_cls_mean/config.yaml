@@ -1,0 +1,7 @@
+encoder: dinov2_s
+tile_mm: 100
+input_px: 448
+px_per_mm: 4.48
+readout: cls_mean
+tiles: full grid
+alpha: nested [1000, 1000, 1000, 1000, 100]

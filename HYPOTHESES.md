@@ -386,3 +386,33 @@ second-order. Five fixed crops vs the full grid should not matter (both average 
 **Prediction.** 100 mm at 4.5 px/mm (448 px) improves on 50 mm (224 px) by ≥ 5. [CLS]-only vs
 [CLS] + mean differs by ≤ 2 at either size. 104 mm at 5 px/mm (518 px) on the full grid is within
 ± 1.5 of the 5-crop replication (40.5). 25 mm (112 px) is worse than 50 mm by ≥ 3.
+
+### H3.5 — results (scripts/ablate_frozen_input.py; frozen DINOv2-S, nested ridge, site folds)
+
+| crop | input | px/mm | tiles/photo | [CLS] + mean patch | [CLS] only |
+|---|---|---|---|---|---|
+| 25 mm | 112 px | 4.5 | 95 | 49.0 | 52.1 |
+| 50 mm | 224 px | 4.5 | 26 | 49.0 | 50.5 |
+| **100 mm** | 448 px | 4.5 | 9 | **42.3** | 45.2 |
+| 104 mm | 518 px | 5.0 | 6 | 44.3 | 44.5 |
+| 104 mm, 5 fixed central crops (public pipeline, HS.2) | 518 px | 5.0 | 5 | — | 40.5 |
+
+| | Prediction | Verdict |
+|---|---|---|
+| 100 mm better than 50 mm by ≥ 5 | −6.7 | **Confirmed**: context is the main factor |
+| [CLS] only vs [CLS] + mean within 2 | mean patch helps by 0.3–3.1 | Mostly confirmed (3.1 at 25 mm and 2.9 at 100 mm exceed it) |
+| 104 mm full grid within ± 1.5 of 5 central crops | 44.3–44.5 vs 40.5 | **Wrong** |
+| 25 mm worse than 50 mm by ≥ 3 | equal (49.0) | **Wrong**: below 50 mm nothing changes, above it a lot does |
+
+**Why.** A 50 mm crop at 4.5 px/mm shows the encoder a nearly uniform texture patch, where the
+object-centric pretrained features have little to work with. At 100 mm whole gravel clasts and their
+spacing are visible, which these features do describe. The readout question matches the
+texture-statistic view: the mean patch token, which weighs every 3 mm region equally, adds information
+over [CLS].
+**Grid vs five central crops (−4).** Restricting the 104 mm grid to tiles centred on the tray's
+short axis gives 40.1, edge rows alone give 47.4: the tray edges (shadow of the frame, soil
+disturbed while filling the tray) carry less useful signal. At 100 mm the same split shows
+no difference (42.2 vs 42.8), so this position effect is not robust. It is tested again with
+trained models in Block 4 (centre vs border tiles).
+**Decision.** Frozen SSL encoders are re-scored at 100 mm / 448 px. Whether fine-tuned ViTs / SSL
+models also gain from 100 mm context is a new hypothesis (training at 448 px costs ~4×).

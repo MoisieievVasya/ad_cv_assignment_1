@@ -29,8 +29,8 @@ ENCODERS = {
 INPUT_PX = 224
 
 
-def load_encoder(key, weights=None, dynamic=False):
-    model = timm.create_model(ENCODERS[key], pretrained=True, num_classes=0, img_size=INPUT_PX, dynamic_img_size=dynamic)
+def load_encoder(key, weights=None, dynamic=False, input_px=INPUT_PX):
+    model = timm.create_model(ENCODERS[key], pretrained=True, num_classes=0, img_size=input_px, dynamic_img_size=dynamic)
     if weights:
         state = torch.load(weights, map_location="cpu")
         model.load_state_dict({k: v for k, v in state.items() if not k.startswith("head")}, strict=False)
@@ -51,9 +51,9 @@ def tile_batches(data, tile_mm=50, batch_size=64):
 
 
 @torch.no_grad()
-def encode_tiles(model, tiles_u8, mean, std, device):
+def encode_tiles(model, tiles_u8, mean, std, device, input_px=INPUT_PX):
     """CLS token and mean patch token, concatenated (2 x dim)."""
-    x = np.stack([resize_to(t.astype(np.float32) / 255, INPUT_PX) for t in tiles_u8])
+    x = np.stack([resize_to(t.astype(np.float32) / 255, input_px) for t in tiles_u8])
     x = torch.from_numpy(x).permute(0, 3, 1, 2).to(device)
     x = (x - torch.tensor(mean, device=device).view(1, 3, 1, 1)) / torch.tensor(std, device=device).view(1, 3, 1, 1)
     with torch.autocast(device.type, dtype=amp_dtype(), enabled=device.type == "cuda"):
@@ -62,21 +62,21 @@ def encode_tiles(model, tiles_u8, mean, std, device):
     return torch.cat([tokens[:, 0], tokens[:, n_prefix:].mean(1)], 1).cpu().numpy()
 
 
-def tile_features(key, data=None, weights=None, tag=None, tile_mm=50):
+def tile_features(key, data=None, weights=None, tag=None, tile_mm=50, input_px=INPUT_PX):
     """Cached per-tile features: (meta DataFrame, float32 array)."""
     tag = tag or key
-    path = paths.CACHE / f"feats_{tag}_{tile_mm}mm.npz"
+    path = paths.CACHE / (f"feats_{tag}_{tile_mm:g}mm.npz" if input_px == INPUT_PX else f"feats_{tag}_{tile_mm:g}mm_{input_px}px.npz")
     if path.exists():
         z = np.load(path, allow_pickle=True)
         return pd.DataFrame(z["meta"].tolist()), z["X"]
     data = data or Data.load()
     device = get_device()
-    model, mean, std = load_encoder(key, weights)
+    model, mean, std = load_encoder(key, weights, input_px=input_px)
     model = model.to(device).eval()
     meta, feats = [], []
-    for rows, tiles in tile_batches(data, tile_mm):
+    for rows, tiles in tile_batches(data, tile_mm, batch_size=64 if input_px <= 256 else 16):
         meta += rows
-        feats.append(encode_tiles(model, tiles, mean, std, device))
+        feats.append(encode_tiles(model, tiles, mean, std, device, input_px))
     X = np.concatenate(feats).astype(np.float32)
     np.savez(path, meta=np.array(meta, dtype=object), X=X)
     return pd.DataFrame(meta), X
