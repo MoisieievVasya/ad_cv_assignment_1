@@ -1,0 +1,20 @@
+{
+  "name": "p6_r18_sgd_frac75",
+  "part": "6",
+  "cv_mean": 45.37,
+  "cv_std": 16.945,
+  "oof_emd": 43.603,
+  "folds": [
+    62.081,
+    59.31,
+    26.819,
+    55.825,
+    22.816
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.1582,
+    "gpu_hours": 0.1582,
+    "peak_mem_gb": 0.611
+  }
+}
