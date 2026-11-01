@@ -3,7 +3,7 @@ name = "soilgs"
 version = "0.1.0"
 description = "Soil grain-size distribution from smartphone photos: CNN, ViT and self-supervised pipelines (AI401 Assignment #1)"
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy>=1.26",
     "pandas>=2.2",

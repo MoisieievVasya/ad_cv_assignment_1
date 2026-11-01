@@ -13,7 +13,7 @@ ONLY = ""                         # one experiment name from the file, or "" for
 REPO = "MoisieievVasya/ad_cv_assignment_1"
 
 # %%
-import os, subprocess
+import base64, os, subprocess
 try:
     from google.colab import userdata
     secret = userdata.get
@@ -23,12 +23,24 @@ except ImportError:  # Kaggle: Add-ons → Secrets
     secret = UserSecretsClient().get_secret
     WORK = "/kaggle/working"
 os.environ["KAGGLE_API_TOKEN"] = secret("KAGGLE_API_TOKEN")
-GH = secret("GH_TOKEN")
+GH = secret("GH_TOKEN").strip()
+# The token goes into an HTTP header, never into a URL or a command line, and is masked in errors.
+AUTH = "AUTHORIZATION: basic " + base64.b64encode(f"x-access-token:{GH}".encode()).decode()
+
+def git(*args, cwd=None):
+    r = subprocess.run(["git", "-c", f"http.https://github.com/.extraheader={AUTH}", *args],
+                       cwd=cwd, capture_output=True, text=True)
+    out = (r.stdout + r.stderr).replace(GH, "***").replace(AUTH, "***")
+    if r.returncode:
+        raise RuntimeError(f"git {args[0]} failed:\n{out}")
+    return out
+
 os.chdir(WORK)
 if not os.path.exists("repo"):
-    subprocess.run(["git", "clone", "-q", f"https://x-access-token:{GH}@github.com/{REPO}.git", "repo"], check=True)
+    git("clone", "-q", f"https://github.com/{REPO}.git", "repo")
 os.chdir("repo")
-subprocess.run("git pull -q", shell=True, check=True)
+git("pull", "-q")
+print(git("log", "--oneline", "-1"))
 !nvidia-smi --query-gpu=name,memory.total --format=csv
 
 # %%
@@ -49,6 +61,9 @@ only = f"--only {ONLY}" if ONLY else ""
 
 # %%
 branch = "results/" + os.path.splitext(os.path.basename(CONFIG))[0] + (f"-{ONLY}" if ONLY else "")
-!git config user.email "colab@runner" && git config user.name "colab-runner"
-!git checkout -q -B {branch} && git add experiments && git commit -q -m "Results of {CONFIG} {ONLY} (cloud run)" && git push -q -f origin {branch}
+git("config", "user.email", "colab@runner"); git("config", "user.name", "colab-runner")
+git("checkout", "-q", "-B", branch)
+git("add", "experiments")
+git("commit", "-q", "-m", f"Results of {CONFIG} {ONLY} (cloud run)")
+git("push", "-q", "-f", "origin", branch)
 print("pushed to", branch)
