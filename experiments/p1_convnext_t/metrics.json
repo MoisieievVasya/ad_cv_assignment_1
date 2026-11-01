@@ -1,0 +1,20 @@
+{
+  "name": "p1_convnext_t",
+  "part": "1",
+  "cv_mean": 46.509,
+  "cv_std": 17.078,
+  "oof_emd": 43.477,
+  "folds": [
+    66.254,
+    64.754,
+    22.31,
+    44.852,
+    34.374
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.4451,
+    "gpu_hours": 0.4451,
+    "peak_mem_gb": 2.549
+  }
+}
