@@ -1,0 +1,20 @@
+{
+  "name": "c_r18_sgd_grey_xdev",
+  "part": "C",
+  "cv_mean": 40.041,
+  "cv_std": 17.074,
+  "oof_emd": 39.668,
+  "folds": [
+    68.171,
+    39.585,
+    18.258,
+    46.43,
+    27.762
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.5597,
+    "gpu_hours": 0.5597,
+    "peak_mem_gb": 0.61
+  }
+}

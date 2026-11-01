@@ -13,7 +13,7 @@ import pandas as pd
 from soilgs import paths
 
 PARTS = {"0": "Part 0 — baselines", "1": "Part 1 — CNN", "2": "Part 2 — ViT", "3": "Part 3 — self-supervised",
-         "6": "Part 6 — data efficiency", "S": "Sanity checks", "final": "Final models (fold checkpoints + test)"}
+         "6": "Part 6 — data efficiency", "C": "Block C — colour normalisation / cross-device", "S": "Sanity checks", "final": "Final models (fold checkpoints + test)"}
 
 
 def main():

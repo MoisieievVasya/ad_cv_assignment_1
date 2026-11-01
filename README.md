@@ -321,9 +321,26 @@ competition ends). It was the only submission, so no model was selected on the l
 **Why the leaderboard is much worse than CV (56.4 vs 36.4).** The public part of the test set has only ~3 samples.
 The test differs from training in every way our controls flagged as fragile: new sites, other phones (iPhone; colour
 is a large signal, Part 4), native resolution with different JPEG compression (only the resolution is equalised),
-and one cobble sample outside the training range. The same kind of shift costs public notebooks similar
+and one cobble sample outside the training range. Changing the phone alone costs +5.7 EMD in our cross-device CV
+(Block C below). The same kind of shift costs public notebooks similar
 amounts: a 5-feature texture model reports LB 57.5 vs leave-one-site-out CV 47.5. Our CV estimates performance on
 *new sites photographed like the training set*, not on a new acquisition setup.
+
+## Colour: signal or phone artefact? (Block C)
+ResNet-18 SGD with per-photo colour normalisation, evaluated with the usual site CV and with a **cross-device**
+site CV (train only on Motorola photos, validate on Samsung photos of held-out samples, and vice versa: the closest
+available simulation of the iPhone test set):
+
+| | standard CV | cross-device CV |
+|---|---|---|
+| original colour | **37.9** | 43.6 |
+| grey-world white balance | 40.1 | 41.0 |
+| greyscale | 43.7 | **40.0** |
+
+Changing the phone costs +5.7 EMD. Colour helps on the same phones but hurts across phones: part of the colour
+signal is the phone's colour rendering. This explains part of the gap between CV and the leaderboard. A
+pre-declared rule (no loss > 1.5 on standard CV) kept the colour-normalised models out of the final submission, so
+this is reported as analysis and future work.
 
 ## Sanity checks: are we doing something wrong?
 * *A classmate's "validation EMD 17" with ResNet-50* vs our 45: the same ResNet-18 recipe scores 25.2

@@ -745,3 +745,26 @@ pre-declared ensemble is rebuilt with that colour normalisation (ResNet-18 SGD a
 ridge recomputed, DINOv2 member unchanged) and submitted as a **second** final candidate: chosen by cross-device CV,
 the closer proxy of the test shift (new phones). The first final submission stays as it is. Otherwise Block C is
 reported as analysis only.
+
+### Block C — results (`scripts/colour_block.py`; ResNet-18 SGD; 23 samples have photos from both phones)
+
+| | standard site CV | cross-device site CV (Motorola ↔ Samsung) |
+|---|---|---|
+| no colour change | **37.9** | 43.6 |
+| grey-world white balance | 40.1 (+2.2) | 41.0 (−2.6) |
+| greyscale | 43.7 (+5.8) | **40.0** (−3.5) |
+
+Without the three shared failures (H037/H038/H616) the cross-device numbers are 38.9 / 33.7 / 29.8.
+| | Prediction | Verdict |
+|---|---|---|
+| device shift | cross-device ≥ 3 worse than standard | +5.7 ✓ |
+| grey-world | ≤ 1.5 lost on standard, ≥ 2 gained cross-device | lost 2.2 ✗, gained 2.6 ✓ |
+| greyscale | ≥ 5 lost on standard, no better than grey-world cross-device | lost 5.8 ✓, better than grey-world (−3.5) ✗ |
+
+**Why.** Colour carries two things: the soil's own colour (clay, moisture), which helps on the same phones (removing
+colour costs 5.8), and the phone's colour rendering, which does not transfer. Across phones the second dominates:
+the network trained on Motorola colours misreads Samsung colours, and removing colour makes the shift smaller than
+the information lost. White balance removes only the global cast, so it lands in between. This is direct evidence
+for one part of the CV → LB gap (test photos: iPhones). **Decision (rule fixed before the results):** grey-world
+gains enough cross-device (2.6 ≥ 2) but loses too much on standard CV (2.2 > 1.5), so no second final candidate
+is built; Block C is reported as analysis. A colour-robust model is the first item for future work.

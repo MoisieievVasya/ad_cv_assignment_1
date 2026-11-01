@@ -122,6 +122,16 @@ Mean-curve baseline 93.4, uniform curve 102.
 | p6_dinov3_s_ft_frac50 | 48.61 ± 19.57 | 49.27 |  |  | 0.336 | NVIDIA L4 |
 | p6_dinov3_s_ft_frac75 | 48.63 ± 19.92 | 47.00 |  |  | 0.336 | NVIDIA L4 |
 
+## Block C — colour normalisation / cross-device
+
+| experiment | CV | OOF | public LB | private LB | GPU-h | device |
+|---|---|---|---|---|---|---|
+| c_r18_sgd_grey_xdev | 40.04 ± 17.07 | 39.67 |  |  | 0.560 | NVIDIA GeForce RTX 5070 Laptop GPU |
+| c_r18_sgd_greyworld | 40.06 ± 16.43 | 38.62 |  |  | 0.372 | NVIDIA GeForce RTX 5070 Laptop GPU |
+| c_r18_sgd_greyworld_xdev | 40.98 ± 14.26 | 41.18 |  |  | 0.559 | NVIDIA GeForce RTX 5070 Laptop GPU |
+| c_r18_sgd_xdev | 43.56 ± 13.27 | 44.75 |  |  | 0.559 | NVIDIA GeForce RTX 5070 Laptop GPU |
+| c_r18_sgd_grey | 43.71 ± 16.43 | 42.03 |  |  | 0.371 | NVIDIA GeForce RTX 5070 Laptop GPU |
+
 ## Sanity checks
 
 | experiment | CV | OOF | public LB | private LB | GPU-h | device |
@@ -159,4 +169,4 @@ Mean-curve baseline 93.4, uniform curve 102.
 
 | submission | public LB | private LB |
 |---|---|---|
-| final_ensemble_guard.csv (CV 36.39 ± 15.54, `notebooks/06_comparison_ensemble.ipynb`) | 56.39 | revealed after 2026-11-30 |
+| final_ensemble_guard.csv | 56.39 |  |

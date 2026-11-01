@@ -91,6 +91,11 @@ part,experiment,device,gpu_hours,hours,peak_mem_gb
 6,p6_r18_sgd_frac75,NVIDIA L4,0.1582,0.1582,0.611
 6,p6_tinyvit_frac50,NVIDIA L4,0.1244,0.1244,0.388
 6,p6_tinyvit_frac75,NVIDIA L4,0.126,0.126,0.388
+C,c_r18_sgd_grey,NVIDIA GeForce RTX 5070 Laptop GPU,0.3708,0.3708,0.61
+C,c_r18_sgd_grey_xdev,NVIDIA GeForce RTX 5070 Laptop GPU,0.5597,0.5597,0.61
+C,c_r18_sgd_greyworld,NVIDIA GeForce RTX 5070 Laptop GPU,0.3717,0.3717,0.612
+C,c_r18_sgd_greyworld_xdev,NVIDIA GeForce RTX 5070 Laptop GPU,0.5592,0.5592,0.61
+C,c_r18_sgd_xdev,NVIDIA GeForce RTX 5070 Laptop GPU,0.5587,0.5587,0.61
 S,s_leaky_photo_split_r18_sgd,NVIDIA GeForce RTX 5070 Laptop GPU,0.0749,0.0749,0.61
 S,s_public_dinov2_sample_nested,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
 S,s_public_dinov2_sample_outer_alpha,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
