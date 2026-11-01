@@ -1,0 +1,20 @@
+{
+  "name": "s_public_dinov2_sample_nested",
+  "part": "S",
+  "cv_mean": 35.236,
+  "cv_std": 7.512,
+  "oof_emd": 34.722,
+  "folds": [
+    35.411,
+    27.775,
+    38.265,
+    27.163,
+    47.567
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0017,
+    "gpu_hours": 0.0017,
+    "peak_mem_gb": 0.247
+  }
+}

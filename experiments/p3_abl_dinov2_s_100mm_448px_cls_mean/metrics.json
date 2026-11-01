@@ -1,0 +1,20 @@
+{
+  "name": "p3_abl_dinov2_s_100mm_448px_cls_mean",
+  "part": "3",
+  "cv_mean": 42.27,
+  "cv_std": 15.925,
+  "oof_emd": 40.69,
+  "folds": [
+    64.876,
+    48.074,
+    21.485,
+    49.906,
+    27.007
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0019,
+    "gpu_hours": 0.0019,
+    "peak_mem_gb": 0.329
+  }
+}

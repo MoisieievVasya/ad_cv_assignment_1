@@ -35,6 +35,8 @@ DEFAULTS = dict(
     aug_flip=True, aug_rot90=True, aug_color=0.0, aug_scale=None, aug_blur=0.0,
     loss="emd", tta=True, seed=0, num_workers=4, amp=True, freeze_backbone=False,
     lp_epochs=0, lp_lr=1e-3, lora_r=0, init_weights=None,   # SSL tuning: LP-FT, LoRA, adapted weights
+    train_frac=1.0,                                          # data efficiency: share of training samples kept
+    epoch_selection=None, inner_folds=3, stop_epoch=None,    # 'nested': pick the stopping epoch by inner CV
 )
 
 
@@ -211,10 +213,6 @@ def train_one(data, train_ids, cfg, device, val_ids=None):
         state = torch.load(cfg["init_weights"], map_location="cpu")
         missing, _ = model.load_state_dict({k: v for k, v in state.items() if not k.startswith("head")}, strict=False)
         assert all(k.startswith("head") for k in missing), missing
-    if cfg["lora_r"]:
-        from peft import LoraConfig, get_peft_model
-        model = get_peft_model(model, LoraConfig(r=cfg["lora_r"], lora_alpha=2 * cfg["lora_r"], target_modules=["qkv"],
-                                                 lora_dropout=0.0, modules_to_save=["head"]))
     model = model.to(device)
     if device.type == "cuda" and not any(k in cfg["arch"] for k in ("vit", "deit", "swin", "maxvit")):
         model = model.to(memory_format=torch.channels_last)  # ~20 % faster convolutions under autocast
@@ -239,8 +237,7 @@ def train_one(data, train_ids, cfg, device, val_ids=None):
 
 
 def _is_head(name):
-    parts = name.replace("base_model.model.", "").split(".")
-    return parts[0] in ("head", "fc", "classifier") or "modules_to_save" in name
+    return name.split(".")[0] in ("head", "fc", "classifier")
 
 
 def _fit(model, loader, cfg, device, data, val_ids, mean, std, head_only=False, stage="ft", epoch0=0):
@@ -287,7 +284,23 @@ def _fit(model, loader, cfg, device, data, val_ids, mean, std, head_only=False, 
         history.append(row)
         if not math.isfinite(row["train_loss"]):
             break
+        if stage == "ft" and cfg["stop_epoch"] and epoch + 1 >= cfg["stop_epoch"]:
+            break  # early stop at a pre-chosen epoch; the LR schedule still spans cfg["epochs"]
     return history
+
+
+def nested_stop_epoch(data, train_ids, cfg, device, site_of):
+    """Stopping epoch chosen by an inner group-CV (by site) on the outer-training samples only:
+    each inner model logs validation EMD per epoch; the epoch with the lowest mean is returned."""
+    from sklearn.model_selection import GroupKFold
+    ids = np.array(train_ids)
+    curves = []
+    for i, (tr, va) in enumerate(GroupKFold(cfg["inner_folds"]).split(ids, groups=site_of.loc[ids].to_numpy())):
+        seed_all(int(cfg["seed"] + 50 + i))
+        _, hist = train_one(data, ids[tr].tolist(), {**cfg, "stop_epoch": None}, device, val_ids=ids[va].tolist())
+        curves.append(hist[hist.stage == "ft"].set_index("epoch").val_emd.reset_index(drop=True))
+    mean_curve = pd.concat(curves, axis=1).mean(1)
+    return int(mean_curve.idxmin()) + 1, mean_curve.round(2).tolist()
 
 
 def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoints=False, verbose=True):
@@ -296,14 +309,24 @@ def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoi
     device = get_device()
     data = Data.load()
     fold_of = data.folds.set_index("sample_id").fold
-    oof, histories = [], []
+    oof, histories, chosen_epochs, inner_curves = [], [], [], []
     with compute_log() as compute:
         for k in sorted(int(f) for f in fold_of.unique()):
             if folds_to_run is not None and k not in folds_to_run:
                 continue
             seed_all(int(cfg["seed"] + k))
             tr, va = fold_of.index[fold_of != k].tolist(), fold_of.index[fold_of == k].tolist()
-            model, hist = train_one(data, tr, cfg, device, val_ids=va)
+            if cfg["train_frac"] < 1:  # same subsample for every model (seeded by fold only)
+                keep = max(2, int(round(cfg["train_frac"] * len(tr))))
+                tr = sorted(np.random.default_rng(1000 + k).choice(tr, keep, replace=False).tolist())
+            fold_cfg = cfg
+            if cfg["epoch_selection"] == "nested":
+                stop, inner_curve = nested_stop_epoch(data, tr, cfg, device, data.folds.set_index("sample_id").site)
+                chosen_epochs.append(stop)
+                inner_curves.append(inner_curve)
+                fold_cfg = {**cfg, "stop_epoch": stop}
+                seed_all(int(cfg["seed"] + k))
+            model, hist = train_one(data, tr, fold_cfg, device, val_ids=va)
             oof.append(predict_samples(model, data, va, "train", cfg, *model.mean_std, device))
             histories.append(hist.assign(fold=k))
             if verbose:
@@ -317,12 +340,16 @@ def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoi
         test_pred = None
         if predict_test:
             seed_all(int(cfg["seed"] + 100))
-            model, _ = train_one(data, fold_of.index.tolist(), cfg, device)
+            full_cfg = {**cfg, "stop_epoch": int(np.median(chosen_epochs))} if chosen_epochs else cfg
+            model, _ = train_one(data, fold_of.index.tolist(), full_cfg, device)
             test_ids = data.photos[data.photos.split == "test"].sample_id.unique()
             test_pred = predict_samples(model, data, test_ids, "test", cfg, *model.mean_std, device)
+            if save_checkpoints:
+                torch.save(model.state_dict(), paths.ROOT / "checkpoints" / name / "full.pt")
     oof = pd.concat(oof)
     data_folds = data.folds if folds_to_run is None else data.folds[data.folds.fold.isin(folds_to_run)]
-    metrics = save_experiment(name, cfg, oof, data.labels, data_folds, compute, part=part)
+    extra = {"chosen_epochs": chosen_epochs, "inner_val_curves": inner_curves} if chosen_epochs else None
+    metrics = save_experiment(name, cfg, oof, data.labels, data_folds, compute, extra=extra, part=part)
     pd.concat(histories).to_csv(paths.EXPERIMENTS / name / "history.csv", index=False)
     if test_pred is not None:
         from .submission import write_submission
@@ -330,4 +357,35 @@ def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoi
     if verbose:
         print(f"[{name}] CV {metrics['cv_mean']:.2f} ± {metrics['cv_std']:.2f}  ({compute['hours'] * 60:.1f} min, "
               f"peak {compute.get('peak_mem_gb', 0):.1f} GB)")
+    return metrics
+
+
+def run_photo_split_cv(name, cfg, part, n_folds=5, seed=0):
+    """LEAKY control (HS.1): folds over *photos*, so other photos of a validation sample are in training.
+    Held-out photos are predicted per fold; a sample's curve is the mean over all its held-out photos.
+    Exists only to show what a non-grouped split does to the score."""
+    from dataclasses import replace
+    cfg = merge_config(cfg)
+    device = get_device()
+    data = Data.load()
+    train_photos = data.photos[data.photos.split == "train"].reset_index(drop=True)
+    fold = np.random.default_rng(seed).permutation(len(train_photos)) % n_folds
+    acc, n = {}, {}
+    with compute_log() as compute:
+        for k in range(n_folds):
+            seed_all(int(cfg["seed"] + k))
+            tr_ph, va_ph = train_photos[fold != k], train_photos[fold == k]
+            d_tr = replace(data, photos=tr_ph)
+            model, _ = train_one(d_tr, sorted(tr_ph.sample_id.unique()), cfg, device)
+            for pid, s in zip(va_ph.photo_id, va_ph.sample_id):  # one curve per held-out photo
+                curve = predict_samples(model, replace(data, photos=va_ph[va_ph.photo_id == pid]), [s], "train",
+                                        cfg, *model.mean_std, device)[COLS].to_numpy()[0]
+                acc[s], n[s] = acc.get(s, 0) + curve, n.get(s, 0) + 1
+            print(f"[{name}] fold {k} done", flush=True)
+            del model
+            torch.cuda.empty_cache()
+    oof = pd.DataFrame({s: acc[s] / n[s] for s in acc}, index=COLS).T
+    metrics = save_experiment(name, {**cfg, "split": f"LEAKY random {n_folds}-fold over photos, seed {seed}"},
+                              oof, data.labels, data.folds, compute, part=part)
+    print(f"[{name}] OOF EMD {metrics['oof_emd']:.2f} (leaky photo split)")
     return metrics

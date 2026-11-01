@@ -1,0 +1,20 @@
+{
+  "name": "p1_r18_gn",
+  "part": "1",
+  "cv_mean": 38.408,
+  "cv_std": 14.417,
+  "oof_emd": 36.839,
+  "folds": [
+    58.567,
+    46.431,
+    20.249,
+    43.102,
+    23.688
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.1206,
+    "gpu_hours": 0.1206,
+    "peak_mem_gb": 1.114
+  }
+}

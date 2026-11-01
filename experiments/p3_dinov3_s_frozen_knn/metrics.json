@@ -1,0 +1,21 @@
+{
+  "name": "p3_dinov3_s_frozen_knn",
+  "part": "3",
+  "cv_mean": 51.626,
+  "cv_std": 20.431,
+  "oof_emd": 50.113,
+  "folds": [
+    72.849,
+    55.201,
+    26.169,
+    74.043,
+    29.868
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.0001,
+    "gpu_hours": 0.0001,
+    "peak_mem_gb": 0.018,
+    "feature_hours": 0.004
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "p2_deit_s",
+  "part": "2",
+  "cv_mean": 48.484,
+  "cv_std": 19.182,
+  "oof_emd": 45.281,
+  "folds": [
+    70.82,
+    70.245,
+    23.906,
+    44.76,
+    32.689
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.1911,
+    "gpu_hours": 0.1911,
+    "peak_mem_gb": 1.526
+  }
+}

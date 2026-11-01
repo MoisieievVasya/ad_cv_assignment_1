@@ -1,0 +1,20 @@
+{
+  "name": "p1_r18_sqrtmse",
+  "part": "1",
+  "cv_mean": 45.909,
+  "cv_std": 15.79,
+  "oof_emd": 43.718,
+  "folds": [
+    63.733,
+    66.389,
+    32.35,
+    36.662,
+    30.41
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.1723,
+    "gpu_hours": 0.1723,
+    "peak_mem_gb": 0.655
+  }
+}

@@ -39,6 +39,29 @@ class TinyViT(nn.Module):
         return self.head(self.forward_features(x)[:, 0])
 
 
+class LoRALinear(nn.Module):
+    """Frozen linear layer + trainable low-rank update: y = W x + (alpha / r) * B A x (Hu et al., 2021).
+    B starts at zero, so training starts exactly from the pretrained model."""
+
+    def __init__(self, base, r, alpha):
+        super().__init__()
+        self.base, self.scale = base, alpha / r
+        self.lora_A = nn.Linear(base.in_features, r, bias=False)
+        self.lora_B = nn.Linear(r, base.out_features, bias=False)
+        nn.init.kaiming_uniform_(self.lora_A.weight, a=5 ** 0.5)
+        nn.init.zeros_(self.lora_B.weight)
+
+    def forward(self, x):
+        return self.base(x) + self.lora_B(self.lora_A(x)) * self.scale
+
+
+def add_lora(model, r):
+    """LoRA on the fused q/k/v projection of every transformer block (alpha = 2r)."""
+    for blk in model.blocks:
+        blk.attn.qkv = LoRALinear(blk.attn.qkv, r, 2 * r)
+    return model
+
+
 def bn_to_gn(module, groups=32):
     """Replace every BatchNorm2d by GroupNorm (affine params copied); batch-independent statistics."""
     for name, child in module.named_children():
@@ -74,6 +97,8 @@ def build_model(cfg):
     model = timm.create_model(cfg["arch"], **kwargs)
     if cfg.get("norm") == "gn":
         bn_to_gn(model)
+    if cfg.get("lora_r"):
+        add_lora(model, cfg["lora_r"])
     return model
 
 

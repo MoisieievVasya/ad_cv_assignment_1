@@ -244,3 +244,175 @@ LP-FT keeps the same ranking. Cost: < 0.5 GPU-hour per adaptation run on the lap
 ### H3.4 — SSL vs supervised pretraining
 **Prediction.** The best SSL configuration (frozen or LP-FT) is at least as good as the best CNN
 (within ± 3) at a fraction of the training cost, and better than the best supervised ViT by ≥ 2.
+
+### Block 2 — results (15 runs, A100, 0.04–0.37 GPU-h each)
+
+CV = mean ± std over the 5 site folds (EMD). References: texture ridge 38.2, ResNet-18 SGD 37.9,
+ResNet-18 AdamW 45.7.
+
+| Run | CV | | Run | CV |
+|---|---|---|---|---|
+| own ViT, scratch, patch 16 | **36.4 ± 14.7** | | ViT-S no LLRD | 46.7 ± 14.6 |
+| own ViT, scratch, patch 8 | 39.5 ± 13.6 | | ViT-S drop-path 0.3 | 46.7 ± 17.3 |
+| Swin-T (IN-22k) | 44.3 ± 16.7 | | ViT-S colour jitter | 46.9 ± 18.6 |
+| MaxViT-T | 44.5 ± 16.1 | | ViT-S no warm-up | 46.9 ± 18.4 |
+| ViT-S SGD | 45.1 ± 16.9 | | ViT-S lr 1e-3 | 47.2 ± 16.1 |
+| ViT-S 384 px (2.1 mm patches) | 45.7 ± 17.6 | | ViT-S (reference recipe) | 47.6 ± 18.8 |
+| DeiT-S (IN-1k) | 48.5 ± 19.2 | | ViT-S wd on all params | 47.6 ± 18.8 |
+| ViT-S drop-path 0 | 48.7 ± 18.7 | | | |
+
+| | Prediction | Verdict |
+|---|---|---|
+| H2.1 | pretrained CNN ≈ pretrained ViT ≫ scratch ViT (60–85) | **Wrong, inverted**: scratch ViT is the best model so far (36.4); pretrained ViT-S 47.6 |
+| H2.2 | no warm-up −≥2, lr 1e-3 −≥5, SGD −≥5 | **Wrong**: 46.9 / 47.2 / 45.1 vs 47.6, all within 2.5, SGD even better |
+| H2.3 | LLRD helps ≥1.5; wd placement ± 1 | LLRD **wrong** (no-LLRD 46.7); wd placement confirmed (47.6) |
+| H2.4 | dp 0 ≈ 0.1; dp 0.3 worse ≥1.5 | dp 0 confirmed (48.7, +1.2); dp 0.3 **wrong** (46.7, better) |
+| H2.5 | 384 px better ≥2; DeiT worse ≥2; Swin best transformer, within 2 of best CNN; MaxViT ≈ Swin | 384 px +1.9 (borderline); DeiT −0.9 (**wrong**); Swin best pretrained transformer ✓ but 6.4 behind ResNet-18 SGD ✗; MaxViT ≈ Swin ✓ |
+
+**Why — one mechanism explains most of the misses: the fixed 15-epoch budget overfits every
+pretrained transformer.** The per-epoch validation curves (monitoring only, never used to pick a
+model) show every pretrained transformer at its best after 1–3 epochs (ViT-S 42.4 at epoch 3,
+Swin 42.8 at epoch 2, ViT-S SGD 40.6 at epoch 3) and then drifting up by 4–6 EMD while the training
+loss keeps falling (ViT-S 56 → 14). Recipe knobs that shape the *early* optimisation (warm-up, LR,
+LLRD, weight-decay placement) are washed out by the end of training. The ±2 differences between
+recipes are far below the fold std (15–19) and, presumably, the seed noise (replicates pending on
+Kaggle). They should not be read as effects. SGD and strong drop-path "help" only because they slow
+down the memorisation.
+
+**Why the scratch ViT wins.** It is small (6 blocks × 192 dims) and starts from nothing, so within
+1500 steps it can only learn coarse, sample-level statistics (brightness, colour, amount of
+high-frequency texture). Its validation EMD is ~37 from epoch 1 and stays flat (train loss 19.5),
+and its per-sample errors correlate 0.86 with the hand-crafted texture ridge: it is effectively a
+learned version of the same features. The pretrained ViT has the capacity to memorise each training
+sample's appearance. Where that hurts is visible per sample: on fine silty soils it is far worse
+than the scratch model (H405 78 vs 25, H666 99 vs 37, H549 35 vs 10, H493 35 vs 10), while on coarse
+soils the two are equal. Every model fails on H038 / H037 (well-graded soils whose gravel hides
+under a fine surface layer) and H616 (the only clean sand), which is a limit of surface photos, not
+of the model.
+
+**Answer to "why does pretraining matter more for ViTs than for CNNs?" — not observed here, and
+why.** The textbook argument (ViTs lack locality priors, so they need pretraining) assumes the task
+needs object-level features learned from many images. This target is a sample-level texture
+statistic, learnable by a tiny model from 19 samples. Pretraining's extra capacity mostly adds a way
+to overfit. The from-scratch *ResNet-18* result (Block 1, pending) is the matching control.
+
+**Consequence for later blocks.** Training length is the dominant hyper-parameter for pretrained
+models on this dataset. Caveat: an epoch count read off these validation curves would be tuned on
+the outer folds (optimistic), so it will be tested as a new hypothesis with nested selection, not
+just applied.
+
+### H2.7 — Training length, chosen without peeking (configs/p2/nested_epochs.yaml)
+Written after Block 2 and before these runs; Part 3 tuning results were not yet known.
+**Hypothesis.** The Block 2 misses come from memorisation late in training. If the stopping epoch is
+chosen by an inner CV that never sees the outer fold, pretrained models keep most of their early
+(epoch 1–3) quality.
+**Prediction.** Chosen epochs are 1–4 for the pretrained models and ≥ 8 for the scratch ViT.
+Nested early stopping improves ViT-S from 47.6 to ≤ 43, Swin-T from 44.3 to ≤ 41, ResNet-18 AdamW from
+45.7 to ≤ 41, and DINOv2-S full fine-tuning likewise by ≥ 4. The scratch ViT changes by < 1.5.
+Even so, no pretrained model beats the scratch ViT by more than 2. The early-epoch curves in
+Block 2 bottomed out at ~41–42, and nested selection is noisier than reading the minimum off the
+outer curve.
+
+---
+
+## Sanity block S — are we doing something wrong? (written before both runs)
+
+Context: every model family stops at CV ≈ 36–38 (best: scratch ViT 36.4, ResNet-18 SGD 37.9,
+texture ridge 38.2; ResNet-50 45.0). A classmate reports "mean validation EMD 17" with ResNet-50, and a
+public notebook reports frozen DINOv2-S + ridge = 34.7 where ours gives 49.0.
+
+### HS.1 — A leaky split explains numbers like 17
+**Hypothesis.** Each sample has 3–8 photos of the same tray. If photos, not samples, are split between
+train and validation, a network that can memorise a sample's appearance is validated on soils it was
+trained on. Our ResNet-50 already reaches EMD 16 on its *training* samples at epoch 6.
+**Prediction.** The exact ResNet-18 SGD recipe (CV 37.9 with site-grouped folds), re-run with a
+random 5-fold split of *photos*, scores ≤ 22 EMD (held-out photos aggregated per sample), i.e. at least
+15 points "better" than the honest number. The texture ridge, which cannot memorise, moved only from
+36.9 to 34.2 under the same leak (measured while writing this), so the gap is specific to
+high-capacity models.
+
+### HS.2 — Is our 50 mm / 224 px tiling too small for frozen pretrained ViTs?
+**Hypothesis (two competing explanations of 34.7 vs 49.0).**
+(a) Context: the public notebook feeds DINOv2 five 104 mm crops at 518 px (≈ 5 px/mm), so the
+model sees whole gravel clasts and the tray-scale arrangement; our 50 mm tiles at 224 px may be too
+small for features learned on object-centric images.
+(b) Validation: their folds are sample-grouped (not site), the fold seed was searched over 5000 seeds
+for balance, and ridge α was chosen on the same folds that are reported.
+**Prediction.** Reproducing their pipeline (5 × 104 mm crops at 518 px, CLS features, mean + std over
+crops per sample, ridge on √mass) on *our* site folds with *nested* α gives 42–46. That is better
+than our 49.0, but far from 34.7, so (b) explains more of the gap than (a). Their α picked on the outer
+folds is ≥ 2 more optimistic than nested α. If the context effect is ≥ 5 EMD, the ViT/SSL blocks are
+re-run with 100 mm tiles.
+
+---
+
+## Block 6a — data efficiency (configs/p6/data_efficiency.yaml), written before the runs
+
+Best recipe per family so far: ResNet-18 SGD (37.9), own scratch ViT (36.4), DINOv3-S fine-tuned (42.2).
+**Hypothesis.** Pretraining is a data prior: the less labelled data, the more it should matter. The
+scratch ViT has no prior at all, so it should degrade fastest when training samples are removed.
+**Prediction.** With 50 % of each fold's training samples (≈ 9–10 samples): scratch ViT +6 to +10 EMD,
+ResNet-18 SGD +4 to +8, DINOv3-S FT +2 to +5. At 50 % the ranking flips and DINOv3-S FT is the best
+of the three. At 75 % all three move by less than half of their 50 % change.
+
+### Sanity block S — results
+
+| | Prediction | Result | Verdict |
+|---|---|---|---|
+| HS.1 leaky photo split, ResNet-18 SGD | ≤ 22, ≥ 15 better than honest | **25.2** vs 36.5 honest (OOF): 11 better | **Direction confirmed, size over-predicted** |
+| HS.2 public DINOv2 pipeline on our site folds | 42–46; validation (b) explains more than context (a); outer-α ≥ 2 optimistic | **40.5** (nested α) vs our 49.0; on sample folds 35.2 (they report 34.7); outer α 40.3 | **Wrong**: context/input (a) is worth ≈ 8.5 EMD, site grouping ≈ 5, α choice ≈ 0.2 |
+
+**HS.1 — why.** With other photos of the same tray in training, the network recognises the tray:
+samples it can memorise drop to 4–8 EMD (H371 14.8 → 3.8, H374 39.8 → 7.6, H493 23.3 → 4.2), while
+soils that differ between photos (H126, H030) do not improve. A reported "validation EMD 17"
+with ResNet-50 (more capacity than ResNet-18, and our ResNet-50 reaches 16 on its *training*
+samples) is consistent with such a split plus picking the best epoch on the validation set. Our
+site-grouped CV stays the only number we use.
+
+**HS.2 — why it was wrong, and what it changes.** The public pipeline differs from ours in three
+ways at once: 104 mm instead of 50 mm context, 518 px at 5 px/mm instead of 224 px at 4.5 px/mm,
+and the [CLS] token only (we used [CLS] + mean patch token). Together they are worth ~8.5 EMD for frozen
+DINOv2. Validation choices explain the rest of the gap to 34.7 (site vs sample folds ≈ 5,
+outer-fold α ≈ 0.2, fold-seed search: not measured). Which of the three input factors matters is
+tested next (H3.5), before any Block 2/3 model is re-run with larger crops.
+
+### H3.5 — Which input factor makes frozen DINOv2 8.5 EMD better? (written before the ablation)
+Frozen DINOv2-S, nested ridge, site folds; one factor changed at a time, all crops on our grid of
+the tray-cropped cache unless stated.
+**Hypothesis.** Context dominates: a 50 mm crop shows at most a few gravel clasts and no
+arrangement, while the encoder was trained on object-centric scenes where 100 mm of soil looks like
+"a surface". Pixel density (4.5 vs 5 px/mm) and the token readout ([CLS] vs [CLS] + mean patch) are
+second-order. Five fixed crops vs the full grid should not matter (both average over the photo).
+**Prediction.** 100 mm at 4.5 px/mm (448 px) improves on 50 mm (224 px) by ≥ 5. [CLS]-only vs
+[CLS] + mean differs by ≤ 2 at either size. 104 mm at 5 px/mm (518 px) on the full grid is within
+± 1.5 of the 5-crop replication (40.5). 25 mm (112 px) is worse than 50 mm by ≥ 3.
+
+### H3.5 — results (scripts/ablate_frozen_input.py; frozen DINOv2-S, nested ridge, site folds)
+
+| crop | input | px/mm | tiles/photo | [CLS] + mean patch | [CLS] only |
+|---|---|---|---|---|---|
+| 25 mm | 112 px | 4.5 | 95 | 49.0 | 52.1 |
+| 50 mm | 224 px | 4.5 | 26 | 49.0 | 50.5 |
+| **100 mm** | 448 px | 4.5 | 9 | **42.3** | 45.2 |
+| 104 mm | 518 px | 5.0 | 6 | 44.3 | 44.5 |
+| 104 mm, 5 fixed central crops (public pipeline, HS.2) | 518 px | 5.0 | 5 | — | 40.5 |
+
+| | Prediction | Verdict |
+|---|---|---|
+| 100 mm better than 50 mm by ≥ 5 | −6.7 | **Confirmed**: context is the main factor |
+| [CLS] only vs [CLS] + mean within 2 | mean patch helps by 0.3–3.1 | Mostly confirmed (3.1 at 25 mm and 2.9 at 100 mm exceed it) |
+| 104 mm full grid within ± 1.5 of 5 central crops | 44.3–44.5 vs 40.5 | **Wrong** |
+| 25 mm worse than 50 mm by ≥ 3 | equal (49.0) | **Wrong**: below 50 mm nothing changes, above it a lot does |
+
+**Why.** A 50 mm crop at 4.5 px/mm shows the encoder a nearly uniform texture patch, where the
+object-centric pretrained features have little to work with. At 100 mm whole gravel clasts and their
+spacing are visible, which these features do describe. The readout question matches the
+texture-statistic view: the mean patch token, which weighs every 3 mm region equally, adds information
+over [CLS].
+**Grid vs five central crops (−4).** Restricting the 104 mm grid to tiles centred on the tray's
+short axis gives 40.1, edge rows alone give 47.4: the tray edges (shadow of the frame, soil
+disturbed while filling the tray) carry less useful signal. At 100 mm the same split shows
+no difference (42.2 vs 42.8), so this position effect is not robust. It is tested again with
+trained models in Block 4 (centre vs border tiles).
+**Decision.** Frozen SSL encoders are re-scored at 100 mm / 448 px. Whether fine-tuned ViTs / SSL
+models also gain from 100 mm context is a new hypothesis (training at 448 px costs ~4×).

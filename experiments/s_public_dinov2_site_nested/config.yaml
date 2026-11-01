@@ -1,0 +1,5 @@
+pipeline: 'public notebook: DINOv2-S/14 reg4 CLS, 5 x 104 mm crops at 518 px (5 px/mm),
+  sample mean+std, ridge on sqrt-mass'
+crops_from: tray-cropped cache
+folds: site
+alpha: nested [1, 100, 1, 1, 10]

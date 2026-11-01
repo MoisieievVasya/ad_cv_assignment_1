@@ -1,0 +1,20 @@
+# Follow-up to Block 2 (H2.7): same recipes, but the stopping epoch of each outer fold is chosen by an
+# inner 3-fold site-grouped CV on that fold's training samples (validation curve per epoch, lowest mean).
+# The LR schedule still spans 15 epochs; training simply stops at the chosen epoch. Cost ≈ 4x a plain run.
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+epoch_selection: nested
+inner_folds: 3
+experiments:
+  - {name: p2_vits_nested, part: "2", arch: vit_small_patch16_224.augreg_in21k_ft_in1k, input_px: 224,
+     optimizer: adamw, lr: 1.0e-4, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1}
+  - {name: p2_swin_t_nested, part: "2", arch: swin_tiny_patch4_window7_224.ms_in22k_ft_in1k, input_px: 224,
+     optimizer: adamw, lr: 1.0e-4, weight_decay: 0.05, drop_path: 0.1}
+  - {name: p2_tinyvit_scratch_nested, part: "2", arch: tiny_vit, pretrained: false, input_px: 224,
+     optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2}
+  - {name: p1_r18_adamw_nested, part: "1", arch: resnet18.a1_in1k, optimizer: adamw, lr: 3.0e-4, weight_decay: 0.05}
+  - {name: p3_dinov2_s_ft_nested, part: "3", arch: vit_small_patch14_reg4_dinov2.lvd142m, input_px: 224,
+     optimizer: adamw, lr: 2.0e-5, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1}

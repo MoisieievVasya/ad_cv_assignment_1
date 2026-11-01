@@ -1,0 +1,21 @@
+{
+  "name": "p3_mae_b_frozen_ridge",
+  "part": "3",
+  "cv_mean": 45.11,
+  "cv_std": 18.485,
+  "oof_emd": 42.673,
+  "folds": [
+    67.197,
+    63.694,
+    24.074,
+    46.243,
+    24.34
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.0016,
+    "gpu_hours": 0.0016,
+    "peak_mem_gb": 0.018,
+    "feature_hours": 0.005
+  }
+}

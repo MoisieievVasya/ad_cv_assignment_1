@@ -1,0 +1,20 @@
+{
+  "name": "s_leaky_photo_split_r18_sgd",
+  "part": "S",
+  "cv_mean": 26.481,
+  "cv_std": 17.01,
+  "oof_emd": 25.152,
+  "folds": [
+    57.229,
+    27.71,
+    6.678,
+    24.485,
+    16.304
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0749,
+    "gpu_hours": 0.0749,
+    "peak_mem_gb": 0.61
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "p2_vits_nowarmup",
+  "part": "2",
+  "cv_mean": 46.908,
+  "cv_std": 18.383,
+  "oof_emd": 43.588,
+  "folds": [
+    65.416,
+    69.108,
+    21.796,
+    46.25,
+    31.97
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.1297,
+    "gpu_hours": 0.1297,
+    "peak_mem_gb": 1.53
+  }
+}
