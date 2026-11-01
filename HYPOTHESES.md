@@ -434,3 +434,39 @@ positional embeddings: DINOv2 was pretrained at 518 px (37 × 37 patches) and is
 to 16 × 16 for 224 px inputs, while DINOv3 and MAE were trained at 224 px. Then 448 px input moves
 DINOv2 closer to its training resolution but moves the others away from theirs. Not tested further.
 This weakens H2.8's prediction for DINOv3 and MAE, which was written before these numbers.
+
+---
+
+## Block 4 — interpretation and shortcut controls (written before the runs)
+
+Models: ResNet-18 SGD (best CNN), own scratch ViT (best overall), pretrained ViT-S (contrast), frozen
+DINOv2-S (SSL; attention rollout of the pretrained encoder). All maps and controls are on held-out
+fold models.
+**H4.1 — what the maps show.** Grad-CAM of predicted coarseness (CNN) lights up individual
+gravel clasts and their shadows on coarse soils and is diffuse on fine soils. Attention rollout of
+the pretrained ViTs concentrates on a few high-contrast spots (bright clasts, specular particles),
+not uniformly on the texture.
+**H4.2 — colour shortcut (main control, numeric).** Clay/silt-rich soils are darker and more
+uniform, so colour alone predicts a lot. *Prediction:* a ridge on six Lab colour statistics per
+tile scores 45–55 (vs mean curve 93). Feeding the trained models tiles replaced by their mean
+colour raises the scratch ViT's EMD by ≤ 10, but the ResNet-18's by ≥ 15. The scratch ViT leans
+on colour more. Greyscale input costs the scratch ViT ≥ 5 and the ResNet-18 ≤ 3.
+**H4.3 — texture vs layout.** Shuffling 4 × 4 patches inside a tile (12.5 mm pieces) costs ≤ 3
+for every model (they read texture statistics, not layout); 8 × 8 (6 mm pieces, cutting gravel)
+costs ≥ 5 on gravelly samples.
+**H4.4 — tray position.** Predicting only from tiles near the tray border is ≥ 3 worse than only
+from central tiles, for every model.
+**H4.5 — device shortcut.** A "model" that predicts the mean curve of the training samples
+photographed with the same phone is no better than the plain mean curve (≥ 85).
+
+## Block 6b — robustness to scale (written before the runs)
+**Prediction.** (a) Same photo at lower resolution with correct px/mm (×0.75, ×0.5, ×0.35 of
+4.5 px/mm, then resampled back): every model degrades monotonically. At ×0.5 the ResNet-18 loses
+≤ 5, the scratch ViT ≤ 5, the pretrained ViT-S ≥ 5. (b) Wrong px/mm by ×1.25 / ×0.8: every model
+loses 5–12 EMD (a pure shift costs 9.7, H0.1, but models are less sensitive than the metric).
+
+## Block 7 — ensemble (written before the runs)
+**Prediction.** Per-sample OOF errors correlate ≥ 0.8 between all trained models (the hard samples
+H037/H038/H616 dominate), and lowest between a trained model and frozen DINOv2 at 100 mm (≤ 0.7).
+An equal-weight average of 3–4 models from different families beats the best single model by
+2–4 EMD. Adding the best-but-similar models (two ResNet-18 recipes) gains < 1.
