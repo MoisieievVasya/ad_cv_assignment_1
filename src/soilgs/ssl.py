@@ -19,7 +19,7 @@ from . import paths
 from .metric import COLS, WEIGHTS, emd
 from .targets import decode, encode
 from .tiles import TARGET_PPM, tile_grid
-from .train import Data, amp_dtype, resize_to
+from .train import Data, amp_dtype, get_device, resize_to
 
 ENCODERS = {
     "dinov2_s": "vit_small_patch14_reg4_dinov2.lvd142m",
@@ -70,7 +70,7 @@ def tile_features(key, data=None, weights=None, tag=None, tile_mm=50):
         z = np.load(path, allow_pickle=True)
         return pd.DataFrame(z["meta"].tolist()), z["X"]
     data = data or Data.load()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = get_device()
     model, mean, std = load_encoder(key, weights)
     model = model.to(device).eval()
     meta, feats = [], []
@@ -143,7 +143,7 @@ def frozen_test(S, labels, method, h, mode="sqrt_mass"):
 
 def linear_probe_oof(meta, X, labels, folds, epochs=200, lr=1e-2, wd=1e-3, seed=0):
     """Tile-level linear softmax head on frozen features, EMD loss (same head/loss as fine-tuning)."""
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = get_device()
     lab = labels.set_index("sample_id")
     tr_mask = (meta.split == "train").to_numpy()
     m = meta[tr_mask].reset_index(drop=True)
@@ -255,7 +255,7 @@ def dino_adapt(key, mode, epochs=10, steps_per_epoch=100, batch_size=32, lr=2e-5
     Returns a history DataFrame (DINO loss per epoch + optional monitor metric) and the weights path."""
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
-    device = torch.device("cuda")
+    device = get_device()
     data = Data.load(splits=("train",))
     imgs = list(data.images.values())
     student, mean, std = load_encoder(key, dynamic=True)  # local views are 98 px
@@ -285,7 +285,7 @@ def dino_adapt(key, mode, epochs=10, steps_per_epoch=100, batch_size=32, lr=2e-5
                 for i in range(4):
                     L[i].append(l[i])
             g_t, l_t = [to_t(v) for v in G], [to_t(v) for v in L]
-            with torch.autocast("cuda", dtype=amp_dtype()):
+            with torch.autocast(device.type, dtype=amp_dtype(), enabled=device.type == "cuda"):
                 with torch.no_grad():
                     t_out = [t_head(teacher(v)).float() for v in g_t]
                 s_out = [s_head(student(v)).float() for v in g_t + l_t]

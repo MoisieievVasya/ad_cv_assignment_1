@@ -180,6 +180,15 @@ def predict_samples(model, data, sample_ids, split, cfg, mean, std, device, batc
     return df
 
 
+def get_device():
+    """CUDA (local RTX / Colab / Kaggle), Apple-silicon MPS, else CPU. Mixed precision is used on CUDA only."""
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def amp_dtype():
     return torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
 
@@ -284,7 +293,7 @@ def _fit(model, loader, cfg, device, data, val_ids, mean, std, head_only=False, 
 def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoints=False, verbose=True):
     """Full group-CV experiment: OOF curves, per-fold scores, training curves, compute log -> experiments/<name>."""
     cfg = merge_config(cfg)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = get_device()
     data = Data.load()
     fold_of = data.folds.set_index("sample_id").fold
     oof, histories = [], []

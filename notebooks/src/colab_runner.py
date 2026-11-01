@@ -8,8 +8,10 @@
 # *Contents: read & write* on this repository only). Runtime → Change runtime type → GPU (A100 / L4 / T4).
 
 # %%
-CONFIG = "configs/p2/vit.yaml"   # which grid to run
-ONLY = ""                         # one experiment name from the file, or "" for all
+CONFIG = "configs/p2/vit.yaml"   # grid (experiments:) or pipeline (commands:) file
+ONLY = ""                         # comma-separated experiment names, or "" for all
+PARALLEL = 4                      # experiments side by side on one GPU: A100 4, L4 3, T4 2
+BRANCH = "vit"                    # results are pushed to results/<BRANCH> after every experiment
 REPO = "MoisieievVasya/ad_cv_assignment_1"
 
 # %%
@@ -56,14 +58,8 @@ if not os.path.exists("data/raw/Training_labels_updated.csv"):
 !git status --short data/        # must be empty: same photo index and folds as the local runs
 
 # %%
+# Runs the grid as a queue (finished experiments are skipped, so re-running this cell resumes) and pushes
+# results after every experiment. Progress below; per-experiment logs in repo/logs/.
+os.environ["GH_TOKEN"] = GH
 only = f"--only {ONLY}" if ONLY else ""
-!python scripts/train.py {CONFIG} {only}
-
-# %%
-branch = "results/" + os.path.splitext(os.path.basename(CONFIG))[0] + (f"-{ONLY}" if ONLY else "")
-git("config", "user.email", "colab@runner"); git("config", "user.name", "colab-runner")
-git("checkout", "-q", "-B", branch)
-git("add", "experiments")
-git("commit", "-q", "-m", f"Results of {CONFIG} {ONLY} (cloud run)")
-git("push", "-q", "-f", "origin", branch)
-print("pushed to", branch)
+!python scripts/run_grid.py {CONFIG} {only} --parallel {PARALLEL} --branch {BRANCH}

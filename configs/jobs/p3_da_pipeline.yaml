@@ -1,0 +1,9 @@
+# Part 3 frozen encoders + domain adaptation, as one sequential pipeline (later steps need earlier checkpoints).
+# Run with: python scripts/run_grid.py configs/jobs/p3_da_pipeline.yaml --branch p3-da
+commands:
+  - python scripts/ssl_frozen.py --submit
+  - python scripts/dino_adapt.py --mode fixed_scale
+  - python scripts/dino_adapt.py --mode rrc
+  - python scripts/ssl_frozen.py --encoders dinov2_s --weights checkpoints/dino_adapt_dinov2_s_fixed_scale.pt --tag da_fixed
+  - python scripts/ssl_frozen.py --encoders dinov2_s --weights checkpoints/dino_adapt_dinov2_s_rrc.pt --tag da_rrc
+  - python scripts/run_grid.py configs/p3/ssl_tune_da.yaml --parallel 2

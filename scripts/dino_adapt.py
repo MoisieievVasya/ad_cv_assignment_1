@@ -20,7 +20,7 @@ from soilgs.data import load_labels
 from soilgs.experiment import compute_log
 from soilgs.metric import COLS, emd
 from soilgs.ssl import dino_adapt, encode_tiles, frozen_oof, sample_matrix, tile_batches
-from soilgs.train import Data
+from soilgs.train import Data, get_device
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
         meta, feats = [], []
         for rows, tiles in tile_batches(data):
             meta += rows
-            feats.append(encode_tiles(teacher, tiles, mean, std, torch.device("cuda")))
+            feats.append(encode_tiles(teacher, tiles, mean, std, get_device()))
         S = sample_matrix(pd.DataFrame(meta), np.concatenate(feats))
         oof, _ = frozen_oof(S, labels, folds, method="ridge")
         teacher.train()
