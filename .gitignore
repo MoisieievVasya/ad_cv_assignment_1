@@ -10,3 +10,4 @@ checkpoints/
 *.safetensors
 .env
 kaggle.json
+logs/

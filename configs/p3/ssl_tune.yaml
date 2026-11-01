@@ -1,0 +1,27 @@
+# Part 3 — tuning self-supervised encoders end-to-end (frozen / LP variants: scripts/ssl_frozen.py).
+# Same tiles (50 mm, 224 px), EMD loss, schedule length and folds as Parts 1–2.
+# FT recipe = Part 2 ViT recipe with a 5x smaller LR (SSL features are more general and easier to destroy).
+part: "3"
+tile_mm: 50
+input_px: 224
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+optimizer: adamw
+lr: 2.0e-5
+weight_decay: 0.05
+warmup_epochs: 1
+llrd: 0.75
+drop_path: 0.1
+experiments:
+  # DINOv2-S/14 (LVD-142M)
+  - {name: p3_dinov2_s_ft, arch: vit_small_patch14_reg4_dinov2.lvd142m}
+  - {name: p3_dinov2_s_lpft, arch: vit_small_patch14_reg4_dinov2.lvd142m, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}
+  - {name: p3_dinov2_s_lora8, arch: vit_small_patch14_reg4_dinov2.lvd142m, lora_r: 8, lr: 2.0e-4, llrd: 1.0, drop_path: 0.0}
+  # DINOv3-S/16 (LVD-1689M)
+  - {name: p3_dinov3_s_ft, arch: vit_small_patch16_dinov3.lvd1689m}
+  - {name: p3_dinov3_s_lpft, arch: vit_small_patch16_dinov3.lvd1689m, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}
+  - {name: p3_dinov3_s_lora8, arch: vit_small_patch16_dinov3.lvd1689m, lora_r: 8, lr: 2.0e-4, llrd: 1.0, drop_path: 0.0}
+  # MAE ViT-B/16 (IN-1k, no labels)
+  - {name: p3_mae_b_ft, arch: vit_base_patch16_224.mae, batch_size: 32}
+  - {name: p3_mae_b_lpft, arch: vit_base_patch16_224.mae, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}

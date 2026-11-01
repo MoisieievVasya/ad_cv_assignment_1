@@ -201,3 +201,46 @@ fine soils. DeiT-S (IN-1k) is worse than ViT-S IN-21k by ≥ 2. Swin-T is the be
 CNN: tolerant to optimiser (SGD ≈ AdamW), to warm-up, prefers frozen BN with few samples per batch.
 ViT: needs AdamW + warm-up + LLRD; normalisation is per-token (LayerNorm), so the batch
 composition (H1.3) does not matter for it at all.
+
+---
+
+## Block 3 — Self-supervised encoders (scripts/ssl_frozen.py, configs/p3/ssl_tune.yaml, scripts/dino_adapt.py)
+
+Encoders: DINOv2-S/14 reg4 (LVD-142M), DINOv3-S/16 (LVD-1689M), MAE ViT-B/16 (IN-1k). Frozen = CLS +
+mean patch token per 50 mm tile; sample = mean and std over tiles. Hyper-parameters of k-NN / ridge
+are picked by an inner leave-one-site-out CV (nested), never on the outer fold. Written while the
+CNN grid was running (Block 1 partially known: ResNet-18 ≈ 38–47).
+
+### H3.1 — Frozen features
+**Hypothesis.** DINO-style features are linearly informative about texture statistics (they were
+trained to match augmented views, which makes them describe "stuff" well), MAE features are not
+linearly separable without fine-tuning (pixel reconstruction objective).
+**Prediction.** DINOv2-S ridge: 36–42 (a public notebook reports 34.7 on sample-grouped folds; site
+folds cost ~4.5, H0.3). DINOv3-S within ± 3 of DINOv2-S. MAE-B ridge worse than DINOv2-S by ≥ 5.
+k-NN is worse than ridge by ≥ 3 for every encoder (with 19 training samples there are no close
+neighbours, ridge can interpolate). Tile-level linear probe ≈ sample-level ridge (± 3).
+
+### H3.2 — Can fine-tuning be worse than frozen features?
+**Hypothesis.** Yes. Full fine-tuning with a randomly initialised head sends large gradients
+through the encoder in the first steps and distorts features that already linearly encode the
+target (Kumar et al., LP-FT). With 19 samples the distortion is never repaired.
+**Prediction.** DINOv2-S full FT is worse than DINOv2-S frozen ridge by ≥ 2. LP-FT beats full FT by
+≥ 2 and lands within ± 2 of frozen. LoRA (r = 8) is within ± 2 of LP-FT at a fraction of the
+trainable parameters. CKA (fold 0, 256 validation tiles, per block) between the encoder before and
+after tuning: blocks 1–4 > 0.9 for all methods; the last block < 0.6 after full FT and > 0.75 after
+LP-FT / LoRA.
+
+### H3.3 — Label-destroying augmentations and domain adaptation
+**Hypothesis.** Anything that changes mm/px changes the answer: RandomResizedCrop / zoom, also strong
+blur (removes fine grains). Standard DINO multi-crop is built on exactly those (global views 32–100 %
+of a region, local 5–32 %, all resized), so continued DINO with default views teaches *scale
+invariance*, the opposite of what the task needs.
+**Prediction.** Continued DINO for 10 × 100 steps on training tiles: with scale-preserving views
+(all crops at 4.5 px/mm, never resized) the frozen-ridge score improves by 1–3 EMD; with standard
+RRC multi-crop it does not improve and is ≥ 1 worse than the scale-preserving run. After adaptation,
+LP-FT keeps the same ranking. Cost: < 0.5 GPU-hour per adaptation run on the laptop GPU, so the
+"helped by how much per GPU-hour" answer is cheap either way.
+
+### H3.4 — SSL vs supervised pretraining
+**Prediction.** The best SSL configuration (frozen or LP-FT) is at least as good as the best CNN
+(within ± 3) at a fraction of the training cost, and better than the best supervised ViT by ≥ 2.

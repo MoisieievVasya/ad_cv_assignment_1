@@ -1,0 +1,16 @@
+# Seed replicates of the reference recipes of Blocks 1–2: same folds, same config, different seed
+# (initialisation of the head, tile sampling, augmentation draws). Measures the run-to-run noise floor
+# that every "A beats B" claim in the results table has to clear (fold std alone is ~15 EMD).
+# Intended for Kaggle (T4: fp16 + GradScaler is selected automatically, no bf16 there).
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+experiments:
+  - {name: rep_p1_r18_sgd_s1, part: "1", arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, seed: 1}
+  - {name: rep_p1_r18_sgd_s2, part: "1", arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, seed: 2}
+  - {name: rep_p1_r18_adamw_s1, part: "1", arch: resnet18.a1_in1k, optimizer: adamw, lr: 3.0e-4, weight_decay: 0.05, seed: 1}
+  - {name: rep_p1_r18_adamw_s2, part: "1", arch: resnet18.a1_in1k, optimizer: adamw, lr: 3.0e-4, weight_decay: 0.05, seed: 2}
+  - {name: rep_p2_vits_s1, part: "2", arch: vit_small_patch16_224.augreg_in21k_ft_in1k, input_px: 224, optimizer: adamw, lr: 1.0e-4, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1, seed: 1}
+  - {name: rep_p2_vits_s2, part: "2", arch: vit_small_patch16_224.augreg_in21k_ft_in1k, input_px: 224, optimizer: adamw, lr: 1.0e-4, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1, seed: 2}
