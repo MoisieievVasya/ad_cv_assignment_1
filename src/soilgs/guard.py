@@ -26,14 +26,21 @@ def quantiles_to_curve(q):
 
 
 class Guard:
+    """two_sided=False: only samples coarser than training (H6c); True: also finer than training (H6d)."""
+
+    def __init__(self, two_sided=False):
+        self.two_sided = two_sided
+
     def fit(self, centroid, curves):
-        self.c_max = float(np.max(centroid))
+        self.c_max, self.c_min = float(np.max(centroid)), float(np.min(centroid))
         Q = np.array([curve_to_quantiles(c) for c in curves])
         self.model = Ridge(alpha=0.1).fit(np.asarray(centroid).reshape(-1, 1), Q)
         return self
 
     def weight(self, centroid):
-        return np.clip((np.asarray(centroid) - self.c_max) / SPAN, 0, 1)
+        c = np.asarray(centroid, dtype=float)
+        w = np.clip((c - self.c_max) / SPAN, 0, 1)
+        return np.maximum(w, np.clip((self.c_min - c) / SPAN, 0, 1)) if self.two_sided else w
 
     def apply(self, centroid, main_curves):
         """Blend; returns (curves, weights)."""

@@ -732,3 +732,9 @@ centroid is ≥ 0.15 above it, compare texture ridge vs texture ridge + guard.
 **Prediction / decision rule (same as H6c).** Used in the final submission only if the mean gain is ≥ 3 EMD and
 ≥ 3 of 5 samples improve. I expect it to fail: fine soils differ mainly in the silt/clay split, which a
 texture-scale centroid at 4.5 px/mm cannot see (one pixel = 0.22 mm), so extrapolating it is noise.
+
+**H6d — result** (`scripts/check_guard_fine.py`, `reports/guard_fine_check.csv`): leave-finest-out on the 5 finest
+training samples, gains −12.4, −0.4, +8.6, −11.7, −5.5 → **mean −4.3, 1 of 5 improved → not used** (prediction
+confirmed). Fine soils differ mainly in their silt/clay split, which the texture-scale centroid at 4.5 px/mm
+(0.22 mm per pixel) does not see; extrapolating it linearly into the clay range adds error. The final
+submission keeps the coarse-side guard only (H6c).
