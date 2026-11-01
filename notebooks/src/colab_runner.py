@@ -16,14 +16,14 @@ REPO = "MoisieievVasya/ad_cv_assignment_1"
 
 # %%
 import base64, os, subprocess
-try:
+if os.path.exists("/kaggle"):  # Kaggle (its image also ships google.colab, so test for Kaggle first)
+    from kaggle_secrets import UserSecretsClient  # Add-ons → Secrets, attached to this notebook
+    secret = UserSecretsClient().get_secret
+    WORK = "/kaggle/working"
+else:
     from google.colab import userdata
     secret = userdata.get
     WORK = "/content"
-except ImportError:  # Kaggle: Add-ons → Secrets
-    from kaggle_secrets import UserSecretsClient
-    secret = UserSecretsClient().get_secret
-    WORK = "/kaggle/working"
 os.environ["KAGGLE_API_TOKEN"] = secret("KAGGLE_API_TOKEN")
 GH = secret("GH_TOKEN").strip()
 # The token goes into an HTTP header, never into a URL or a command line, and is masked in errors.
@@ -47,7 +47,7 @@ print(git("log", "--oneline", "-1"))
 
 # %%
 # Cloud images ship their own CUDA torch; install only what is missing, then the package without deps.
-!pip install -q "timm==1.0.30" "peft==0.21.2" kaggle six
+!pip install -q "timm==1.0.30" kaggle six
 !pip install -q -e . --no-deps
 
 # %%

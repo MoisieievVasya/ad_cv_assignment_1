@@ -244,3 +244,71 @@ LP-FT keeps the same ranking. Cost: < 0.5 GPU-hour per adaptation run on the lap
 ### H3.4 — SSL vs supervised pretraining
 **Prediction.** The best SSL configuration (frozen or LP-FT) is at least as good as the best CNN
 (within ± 3) at a fraction of the training cost, and better than the best supervised ViT by ≥ 2.
+
+### Block 2 — results (15 runs, A100, 0.04–0.37 GPU-h each)
+
+CV = mean ± std over the 5 site folds (EMD). References: texture ridge 38.2, ResNet-18 SGD 37.9,
+ResNet-18 AdamW 45.7.
+
+| Run | CV | | Run | CV |
+|---|---|---|---|---|
+| own ViT, scratch, patch 16 | **36.4 ± 14.7** | | ViT-S no LLRD | 46.7 ± 14.6 |
+| own ViT, scratch, patch 8 | 39.5 ± 13.6 | | ViT-S drop-path 0.3 | 46.7 ± 17.3 |
+| Swin-T (IN-22k) | 44.3 ± 16.7 | | ViT-S colour jitter | 46.9 ± 18.6 |
+| MaxViT-T | 44.5 ± 16.1 | | ViT-S no warm-up | 46.9 ± 18.4 |
+| ViT-S SGD | 45.1 ± 16.9 | | ViT-S lr 1e-3 | 47.2 ± 16.1 |
+| ViT-S 384 px (2.1 mm patches) | 45.7 ± 17.6 | | ViT-S (reference recipe) | 47.6 ± 18.8 |
+| DeiT-S (IN-1k) | 48.5 ± 19.2 | | ViT-S wd on all params | 47.6 ± 18.8 |
+| ViT-S drop-path 0 | 48.7 ± 18.7 | | | |
+
+| | Prediction | Verdict |
+|---|---|---|
+| H2.1 | pretrained CNN ≈ pretrained ViT ≫ scratch ViT (60–85) | **Wrong, inverted**: scratch ViT is the best model so far (36.4); pretrained ViT-S 47.6 |
+| H2.2 | no warm-up −≥2, lr 1e-3 −≥5, SGD −≥5 | **Wrong**: 46.9 / 47.2 / 45.1 vs 47.6, all within 2.5, SGD even better |
+| H2.3 | LLRD helps ≥1.5; wd placement ± 1 | LLRD **wrong** (no-LLRD 46.7); wd placement confirmed (47.6) |
+| H2.4 | dp 0 ≈ 0.1; dp 0.3 worse ≥1.5 | dp 0 confirmed (48.7, +1.2); dp 0.3 **wrong** (46.7, better) |
+| H2.5 | 384 px better ≥2; DeiT worse ≥2; Swin best transformer, within 2 of best CNN; MaxViT ≈ Swin | 384 px +1.9 (borderline); DeiT −0.9 (**wrong**); Swin best pretrained transformer ✓ but 6.4 behind ResNet-18 SGD ✗; MaxViT ≈ Swin ✓ |
+
+**Why — one mechanism explains most of the misses: the fixed 15-epoch budget overfits every
+pretrained transformer.** The per-epoch validation curves (monitoring only, never used to pick a
+model) show every pretrained transformer at its best after 1–3 epochs (ViT-S 42.4 at epoch 3,
+Swin 42.8 at epoch 2, ViT-S SGD 40.6 at epoch 3) and then drifting up by 4–6 EMD while the training
+loss keeps falling (ViT-S 56 → 14). Recipe knobs that shape the *early* optimisation (warm-up, LR,
+LLRD, weight-decay placement) are washed out by the end of training. The ±2 differences between
+recipes are far below the fold std (15–19) and, presumably, the seed noise (replicates pending on
+Kaggle). They should not be read as effects. SGD and strong drop-path "help" only because they slow
+down the memorisation.
+
+**Why the scratch ViT wins.** It is small (6 blocks × 192 dims) and starts from nothing, so within
+1500 steps it can only learn coarse, sample-level statistics (brightness, colour, amount of
+high-frequency texture). Its validation EMD is ~37 from epoch 1 and stays flat (train loss 19.5),
+and its per-sample errors correlate 0.86 with the hand-crafted texture ridge: it is effectively a
+learned version of the same features. The pretrained ViT has the capacity to memorise each training
+sample's appearance. Where that hurts is visible per sample: on fine silty soils it is far worse
+than the scratch model (H405 78 vs 25, H666 99 vs 37, H549 35 vs 10, H493 35 vs 10), while on coarse
+soils the two are equal. Every model fails on H038 / H037 (well-graded soils whose gravel hides
+under a fine surface layer) and H616 (the only clean sand), which is a limit of surface photos, not
+of the model.
+
+**Answer to "why does pretraining matter more for ViTs than for CNNs?" — not observed here, and
+why.** The textbook argument (ViTs lack locality priors, so they need pretraining) assumes the task
+needs object-level features learned from many images. This target is a sample-level texture
+statistic, learnable by a tiny model from 19 samples. Pretraining's extra capacity mostly adds a way
+to overfit. The from-scratch *ResNet-18* result (Block 1, pending) is the matching control.
+
+**Consequence for later blocks.** Training length is the dominant hyper-parameter for pretrained
+models on this dataset. Caveat: an epoch count read off these validation curves would be tuned on
+the outer folds (optimistic), so it will be tested as a new hypothesis with nested selection, not
+just applied.
+
+### H2.7 — Training length, chosen without peeking (configs/p2/nested_epochs.yaml)
+Written after Block 2 and before these runs; Part 3 tuning results were not yet known.
+**Hypothesis.** The Block 2 misses come from memorisation late in training. If the stopping epoch is
+chosen by an inner CV that never sees the outer fold, pretrained models keep most of their early
+(epoch 1–3) quality.
+**Prediction.** Chosen epochs are 1–4 for the pretrained models and ≥ 8 for the scratch ViT.
+Nested early stopping improves ViT-S from 47.6 to ≤ 43, Swin-T from 44.3 to ≤ 41, ResNet-18 AdamW from
+45.7 to ≤ 41, and DINOv2-S full fine-tuning likewise by ≥ 4. The scratch ViT changes by < 1.5.
+Even so, no pretrained model beats the scratch ViT by more than 2. The early-epoch curves in
+Block 2 bottomed out at ~41–42, and nested selection is noisier than reading the minimum off the
+outer curve.

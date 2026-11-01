@@ -58,6 +58,8 @@ class Pusher:
         if code == 0:
             code, out = self.git("push", "-q", "-f", "origin", f"HEAD:{self.branch}")
             print(f"  pushed to {self.branch}" if code == 0 else f"  push failed: {out}", flush=True)
+        else:
+            print("  nothing new to commit", flush=True)
 
 
 def main():
@@ -70,6 +72,8 @@ def main():
     args = ap.parse_args()
 
     pusher = Pusher(args.branch)
+    if args.branch and not pusher.auth:
+        print("WARNING: --branch given but GH_TOKEN is not set: results stay on this machine only", flush=True)
     if pusher.branch and pusher.auth:
         pusher.git("config", "user.email", "runner@cloud")
         pusher.git("config", "user.name", "cloud-runner")
@@ -97,6 +101,7 @@ def main():
     queue = [q for q in queue if not done(q[1])]
     if skipped:
         print("already done, skipped:", ", ".join(skipped), flush=True)
+        pusher.push(f"sync finished experiments: {', '.join(skipped)}")
     workers = max(2, (os.cpu_count() or 4) // max(args.parallel, 1) - 1)
     print(f"{len(queue)} experiments, {args.parallel} in parallel, {workers} data workers each", flush=True)
 
