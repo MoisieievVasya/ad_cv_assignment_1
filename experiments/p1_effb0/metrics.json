@@ -1,0 +1,20 @@
+{
+  "name": "p1_effb0",
+  "part": "1",
+  "cv_mean": 49.885,
+  "cv_std": 18.89,
+  "oof_emd": 46.689,
+  "folds": [
+    62.891,
+    75.77,
+    27.232,
+    54.014,
+    29.52
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.3792,
+    "gpu_hours": 0.3792,
+    "peak_mem_gb": 1.657
+  }
+}
