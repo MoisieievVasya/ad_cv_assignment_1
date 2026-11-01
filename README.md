@@ -94,7 +94,10 @@ Notebook: `notebooks/00_eda_metric_validation.ipynb`.
 * One test sample (Münster) is cobble-sized (60–150 mm stones), coarser than anything in training.
 
 **Metric.** EMD = Σᵢ |F_true(dᵢ) − F_pred(dᵢ)| · log₁₀(dᵢ₊₁/dᵢ): the area between the cumulative curves on a
-log-size axis (all weights ≈ 0.5). Implementation reproduces the public baselines (uniform 102.0, mean curve 89.9).
+log-size axis (all weights ≈ 0.5), left-point rule over the 10 intervals, in percent (as on the official Evaluation
+page, quoted in a public notebook). Implementation reproduces the public baselines (uniform 102.0, mean curve 89.9).
+Because every model outputs bin masses through a softmax, predictions are valid CDFs by construction, so no
+post-hoc monotone repair is ever needed (a public notebook shows such repairs change scores by up to 10 EMD).
 * *Strengths:* physically meaningful (area between curves), uses the whole curve, robust (L1), insensitive to how
   samples are distributed between bins.
 * *Weaknesses / edge cases:* a **scale error by factor k costs ≈ 100·log₁₀k** whatever the curve shape
@@ -288,8 +291,11 @@ model shrinks it towards the training mean (≈ 99 % passing 63 mm). A pre-decla
 `src/soilgs/guard.py`) predicts the curve's log-diameter quantiles from the texture-scale centroid with a linear model
 and blends it in only when a sample lies beyond the training range. In a leave-coarsest-out check on the 5 coarsest
 training samples it cut their EMD from 34–66 to 24–42 (mean −16, 5/5 improved), so it is part of the final submission.
-On the test set it changes only Münster (63 mm point: 99.5 → 26 % passing). Not used: SAM-based stone measurement
-calibrated on one sample (public notebook), which cannot be validated on CV.
+On the test set it changes only Münster (63 mm point: 99.5 → 26 % passing). The same guard on the *fine* side
+(H6d, leave-finest-out) made 4 of 5 samples worse (mean +4.3 EMD) and is not used: fine soils differ in their
+silt/clay split, which a texture scale at 0.22 mm/pixel cannot see. Not used either: SAM-based stone measurement
+calibrated on one sample, a "clean-sand fines" prior and JPEG/colour matching of the test photos (public notebooks).
+None of them can be validated on CV, so they would be tuned on the leaderboard.
 
 ## Part 7 — ensemble
 
