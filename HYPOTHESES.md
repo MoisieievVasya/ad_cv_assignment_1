@@ -101,3 +101,61 @@ the risk is not out-of-range inputs but in-range inputs that mean something else
 iPhone), test photos are 3–4× sharper than training photos. The mean-curve baseline on the shared
 folds is 93.4 ± 9.6. The texture ridge reaches 38.2 ± 14.6. The left-point and trapezoid metric
 variants rank samples identically (Spearman 0.999).
+
+---
+
+## Block 1 — CNNs (configs/p1/cnn.yaml)
+
+Common setup: tiles of 50 mm at 4.5 px/mm (225 px), random tile positions, softmax over 11 bins →
+cumulative curve, EMD loss, 15 × 100 steps, batch 32, grid-tile + flip TTA at validation,
+tile → photo → sample averaging. Reference points: texture ridge 38.2 ± 14.6, mean curve 93.4.
+
+### H1.1 — Pretrained CNN vs hand-crafted texture, and architecture
+**Hypothesis.** With 19 training samples per fold, a fine-tuned CNN learns roughly the same
+"dominant texture scale" signal as the DoG features; it cannot learn much more.
+**Prediction.** ResNet-18 (AdamW baseline) lands at 34–42, within one fold-std of the texture
+ridge. ResNet-50 ≈ ResNet-18 (± 2); ConvNeXt-T (IN-22k) is the best CNN but by less than 4 EMD;
+EfficientNet-B0 ≈ ResNet-18.
+
+### H1.2 — Optimiser and schedule
+**Hypothesis.** For a pretrained, BatchNorm-equipped CNN the loss landscape is benign: SGD and AdamW
+reach similar solutions and warm-up is unnecessary.
+**Prediction.** SGD (lr 0.01) vs AdamW (3e-4): |Δ| < 2 EMD. Removing warm-up: |Δ| < 1. AdamW at
+lr 1e-3 is worse by ≥ 2 (the pretrained filters get overwritten on 19 samples).
+
+### H1.3 — BatchNorm when a batch holds few physical samples
+**Hypothesis.** The label is a property of the whole sample, and much of it is in the *absolute*
+level of texture statistics (how much high-frequency energy, how bright). Train-mode BN normalises
+each channel by the batch statistics; if a batch contains tiles of only 2 samples, it removes exactly
+that between-sample level difference during training, and the running statistics used at test
+time describe a different distribution.
+**Prediction.** Batches drawn from 2 samples (`k2`) with train-mode BN are worse than random batches
+by ≥ 3 EMD. Frozen BN (ImageNet statistics) closes the gap: frozen-BN-k2 ≈ frozen-BN ≈ random-BN
+(± 1.5). GroupNorm, swapped into a BN-pretrained network, is worse than frozen BN by 1–3
+(the pretrained weights were calibrated to BN statistics).
+
+### H1.4 — Augmentations
+**Hypothesis.** Flips and 90° rotations do not change grain size (texture is isotropic); random tile
+positions already augment a lot. Scale augmentation changes mm/px and therefore the correct answer;
+blur erases the finest grains.
+**Prediction.** No flips/rotations: worse by ≥ 1. Colour jitter (± 20 %): neutral (|Δ| < 1.5).
+Random rescale ×[0.5, 2]: worse by ≥ 5 (Block 0: one octave of scale noise costs ~30 EMD per
+sample, and the model can only learn the scale-averaged answer). Blur (σ up to 2 px ≈ 0.45 mm):
+worse by ≥ 2, mostly on fine soils.
+
+### H1.5 — Input resolution and context
+**Prediction.** Halving resolution (50 mm tile at 112 px = 2.25 px/mm) is worse by ≥ 3, mostly on
+fine soils. Doubling context (100 mm tile, 450 px) is within ± 2 overall but better on gravelly
+samples, the opposite of what H0.4 showed for averaged hand-crafted statistics, because a single
+CNN tile has to see whole stones.
+
+### H1.6 — Loss
+**Prediction.** Training with the EMD itself beats sqrt-mass MSE by ≥ 2 EMD.
+
+### H1.7 — Pretraining for CNNs
+**Hypothesis.** The CNN inductive biases (locality, weight sharing, translation equivariance,
+pooling) suit stationary texture, so even from scratch a CNN learns something; but 19 samples
+are far too few to learn good filters.
+**Prediction.** ResNet-18 from scratch: 50–75 EMD, i.e. clearly better than the mean curve (93) but
+≥ 15 worse than pretrained. Later contrast: a from-scratch ViT will be much closer to the mean curve
+(Block 2).
