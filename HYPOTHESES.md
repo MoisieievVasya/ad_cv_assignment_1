@@ -159,3 +159,45 @@ are far too few to learn good filters.
 **Prediction.** ResNet-18 from scratch: 50–75 EMD, i.e. clearly better than the mean curve (93) but
 ≥ 15 worse than pretrained. Later contrast: a from-scratch ViT will be much closer to the mean curve
 (Block 2).
+
+---
+
+## Block 2 — Vision Transformers (configs/p2/vit.yaml)
+
+Written before any Block 1 result was known (the CNN grid was still running), so these
+predictions do not condition on the CNN numbers.
+
+### H2.1 — From scratch vs pretrained ViT vs pretrained CNN
+**Hypothesis.** A ViT has almost no image prior: it must learn locality and translation equivariance
+from data. 19 samples (≈ 100 photos) cannot teach that, so a from-scratch ViT learns at most the
+global colour/brightness of a tile. Pretraining supplies the prior that a CNN gets from its
+architecture.
+**Prediction.** Order: pretrained CNN (ResNet-18) ≈ pretrained ViT-S (within ± 4) ≫ own ViT from
+scratch. The scratch ViT lands at 60–85, close to colour-only predictors and far from the
+pretrained models; patch 8 does not save it (± 5 vs patch 16). The pretrained-vs-scratch gap is
+larger for the ViT than for ResNet-18 (H1.7).
+
+### H2.2 — Warm-up and learning rate
+**Hypothesis.** Adam on a ViT has large, poorly-estimated second moments in the first steps, and
+attention logits can blow up; LayerNorm-only nets lack BN's implicit scale control.
+**Prediction.** Removing warm-up hurts the ViT (≥ 2 EMD) more than it hurt ResNet-18 (H1.2 predicted
+< 1). lr 1e-3 is clearly harmful (≥ 5 worse). SGD is worse than AdamW by ≥ 5 (vs < 2 for the CNN).
+
+### H2.3 — Layer-wise LR decay and weight decay placement
+**Prediction.** LLRD 0.75 beats no LLRD by ≥ 1.5 (protects the generic early blocks on a tiny
+dataset). Applying weight decay to LayerNorm/bias/position embeddings is within ± 1 (wd 0.05 over
+1500 steps is too weak to matter much).
+
+### H2.4 — Stochastic depth
+**Prediction.** 0.1 is best; 0 vs 0.1 within ± 1.5; 0.3 is worse by ≥ 1.5 (too much noise for a
+6-block-equivalent-depth adaptation with 1500 steps).
+
+### H2.5 — Patch size in millimetres, architecture, pretraining data
+**Prediction.** 384 px input (2.1 mm patches) beats 224 px (3.6 mm patches) by ≥ 2, mostly on
+fine soils. DeiT-S (IN-1k) is worse than ViT-S IN-21k by ≥ 2. Swin-T is the best transformer
+(local windows ≈ CNN prior) and lands within ± 2 of the best CNN; MaxViT-T ≈ Swin-T.
+
+### H2.6 — Why CNN and ViT recipes differ (to be checked against Blocks 1–2)
+CNN: tolerant to optimiser (SGD ≈ AdamW), to warm-up, prefers frozen BN with few samples per batch.
+ViT: needs AdamW + warm-up + LLRD; normalisation is per-token (LayerNorm), so the batch
+composition (H1.3) does not matter for it at all.

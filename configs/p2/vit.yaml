@@ -1,0 +1,37 @@
+# Part 2 — Vision Transformers. Same tiles (50 mm), loss, schedule length and folds as Part 1.
+# Pretrained-ViT recipe: AdamW 1e-4, wd 0.05 only on weight matrices, 1 warm-up epoch + cosine,
+# layer-wise LR decay 0.75, stochastic depth 0.1, 224 px input (225 -> 224 resize, negligible).
+part: "2"
+arch: vit_small_patch16_224.augreg_in21k_ft_in1k
+tile_mm: 50
+input_px: 224
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+optimizer: adamw
+lr: 1.0e-4
+weight_decay: 0.05
+warmup_epochs: 1
+llrd: 0.75
+drop_path: 0.1
+experiments:
+  # --- from scratch (own ViT, Lecture-1 style): 6 blocks, dim 192, patch 16
+  - {name: p2_tinyvit_scratch, arch: tiny_vit, pretrained: false, lr: 5.0e-4, llrd: 1.0, warmup_epochs: 2}
+  - {name: p2_tinyvit_scratch_p8, arch: tiny_vit, pretrained: false, patch: 8, lr: 5.0e-4, llrd: 1.0, warmup_epochs: 2}
+  # --- pretrained ViT-S/16 (IN-21k -> IN-1k) and its optimisation ablations
+  - {name: p2_vits}
+  - {name: p2_vits_nowarmup, warmup_epochs: 0}
+  - {name: p2_vits_nollrd, llrd: 1.0}
+  - {name: p2_vits_wd_all, wd_on_all: true}
+  - {name: p2_vits_dp0, drop_path: 0.0}
+  - {name: p2_vits_dp03, drop_path: 0.3}
+  - {name: p2_vits_lr1e-3, lr: 1.0e-3}
+  - {name: p2_vits_sgd, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4}
+  - {name: p2_vits_color, aug_color: 0.2}
+  # --- patch size in mm: same 50 mm tile at 384 px -> one 16 px patch covers 2.1 mm instead of 3.6 mm
+  - {name: p2_vits_384, arch: vit_small_patch16_384.augreg_in21k_ft_in1k, input_px: 384, batch_size: 16}
+  # --- pretraining data: DeiT-S (IN-1k only)
+  - {name: p2_deit_s, arch: deit_small_patch16_224.fb_in1k}
+  # --- hierarchical / hybrid transformers (LLRD off: block indices are per stage)
+  - {name: p2_swin_t, arch: swin_tiny_patch4_window7_224.ms_in22k_ft_in1k, llrd: 1.0}
+  - {name: p2_maxvit_t, arch: maxvit_tiny_tf_224.in1k, llrd: 1.0, batch_size: 16}
