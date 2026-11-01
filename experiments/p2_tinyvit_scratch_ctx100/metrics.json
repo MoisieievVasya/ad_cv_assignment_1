@@ -1,0 +1,20 @@
+{
+  "name": "p2_tinyvit_scratch_ctx100",
+  "part": "2",
+  "cv_mean": 38.135,
+  "cv_std": 14.369,
+  "oof_emd": 36.423,
+  "folds": [
+    57.146,
+    48.566,
+    20.377,
+    41.738,
+    22.845
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.4141,
+    "gpu_hours": 0.4141,
+    "peak_mem_gb": 1.326
+  }
+}
