@@ -1,0 +1,20 @@
+{
+  "name": "p3_dinov3_s_ft_ctx100",
+  "part": "3",
+  "cv_mean": 44.473,
+  "cv_std": 19.868,
+  "oof_emd": 44.039,
+  "folds": [
+    69.35,
+    35.85,
+    22.301,
+    67.071,
+    27.794
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 1.9969,
+    "gpu_hours": 1.9969,
+    "peak_mem_gb": 6.065
+  }
+}
