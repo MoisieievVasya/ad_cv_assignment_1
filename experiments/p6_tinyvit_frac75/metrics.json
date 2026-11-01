@@ -1,0 +1,20 @@
+{
+  "name": "p6_tinyvit_frac75",
+  "part": "6",
+  "cv_mean": 45.877,
+  "cv_std": 17.431,
+  "oof_emd": 43.744,
+  "folds": [
+    65.201,
+    63.294,
+    26.89,
+    49.737,
+    24.264
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.126,
+    "gpu_hours": 0.126,
+    "peak_mem_gb": 0.388
+  }
+}
