@@ -212,10 +212,6 @@ def train_one(data, train_ids, cfg, device, val_ids=None):
         state = torch.load(cfg["init_weights"], map_location="cpu")
         missing, _ = model.load_state_dict({k: v for k, v in state.items() if not k.startswith("head")}, strict=False)
         assert all(k.startswith("head") for k in missing), missing
-    if cfg["lora_r"]:
-        from peft import LoraConfig, get_peft_model
-        model = get_peft_model(model, LoraConfig(r=cfg["lora_r"], lora_alpha=2 * cfg["lora_r"], target_modules=["qkv"],
-                                                 lora_dropout=0.0, modules_to_save=["head"]))
     model = model.to(device)
     if device.type == "cuda" and not any(k in cfg["arch"] for k in ("vit", "deit", "swin", "maxvit")):
         model = model.to(memory_format=torch.channels_last)  # ~20 % faster convolutions under autocast
@@ -240,8 +236,7 @@ def train_one(data, train_ids, cfg, device, val_ids=None):
 
 
 def _is_head(name):
-    parts = name.replace("base_model.model.", "").split(".")
-    return parts[0] in ("head", "fc", "classifier") or "modules_to_save" in name
+    return name.split(".")[0] in ("head", "fc", "classifier")
 
 
 def _fit(model, loader, cfg, device, data, val_ids, mean, std, head_only=False, stage="ft", epoch0=0):

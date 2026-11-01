@@ -47,7 +47,7 @@ print(git("log", "--oneline", "-1"))
 
 # %%
 # Cloud images ship their own CUDA torch; install only what is missing, then the package without deps.
-!pip install -q "timm==1.0.30" "peft==0.21.2" kaggle six
+!pip install -q "timm==1.0.30" kaggle six
 !pip install -q -e . --no-deps
 
 # %%

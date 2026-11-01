@@ -30,10 +30,6 @@ def load_trained(name, fold, device=None):
     model = build_model(cfg)
     data_cfg = model.pretrained_cfg if hasattr(model, "pretrained_cfg") and cfg.get("pretrained", True) else {}
     mean, std = data_cfg.get("mean", (0.485, 0.456, 0.406)), data_cfg.get("std", (0.229, 0.224, 0.225))
-    if cfg.get("lora_r"):
-        from peft import LoraConfig, get_peft_model
-        model = get_peft_model(model, LoraConfig(r=cfg["lora_r"], lora_alpha=2 * cfg["lora_r"], target_modules=["qkv"],
-                                                 lora_dropout=0.0, modules_to_save=["head"]))
     ckpt = paths.ROOT / "checkpoints" / name / (f"fold{fold}.pt" if fold != "full" else "full.pt")
     model.load_state_dict(torch.load(ckpt, map_location="cpu"))
     return model.to(device).eval(), cfg, mean, std
@@ -151,7 +147,7 @@ def gradcam(model, tiles, cfg, mean, std, device):
 def attention_rollout(model, tiles, cfg, mean, std, device, discard=0.0):
     """Attention rollout (Abnar & Zuidema 2020) for plain ViTs: average heads, add identity, multiply over
     blocks; the [CLS] row over patch tokens is the map -> (n, h, w) in [0, 1]."""
-    vit = model.base_model.model if hasattr(model, "base_model") else model
+    vit = model
     attns = []
     hooks = []
     for blk in vit.blocks:
