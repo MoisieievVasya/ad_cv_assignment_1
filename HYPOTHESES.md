@@ -558,5 +558,5 @@ quickly solves its pretext task (loss 8.2 → 3.6 in 10 epochs). The easiest cue
 from the same photo" is the tray's colour, illumination and moisture pattern, not grain size. The
 monitor shows frozen-ridge OOF EMD rising from 45.3 / 44.5 to 48.4 / 47.2 as soon as the backbone
 starts training. Scale-preserving views make that shortcut *easier* (same scale, same tray), which
-is why they hurt slightly more than standard multi-crop. Verdict: DA helped by −1 to −4 EMD (i.e.
-hurt), at ~0.1 L4-hours per run.
+is why they hurt slightly more than standard multi-crop. Verdict: DA made every score worse by 1–4 EMD
+at ~0.1 L4-hours per run.
