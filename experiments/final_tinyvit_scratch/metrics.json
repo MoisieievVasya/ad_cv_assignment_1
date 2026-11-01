@@ -1,0 +1,20 @@
+{
+  "name": "final_tinyvit_scratch",
+  "part": "final",
+  "cv_mean": 36.551,
+  "cv_std": 14.77,
+  "oof_emd": 35.202,
+  "folds": [
+    59.397,
+    41.536,
+    18.372,
+    40.857,
+    22.59
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.142,
+    "gpu_hours": 0.142,
+    "peak_mem_gb": 0.378
+  }
+}

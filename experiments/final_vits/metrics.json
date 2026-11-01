@@ -1,0 +1,20 @@
+{
+  "name": "final_vits",
+  "part": "final",
+  "cv_mean": 47.773,
+  "cv_std": 19.101,
+  "oof_emd": 44.425,
+  "folds": [
+    67.341,
+    70.65,
+    22.285,
+    47.188,
+    31.401
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.4539,
+    "gpu_hours": 0.4539,
+    "peak_mem_gb": 1.531
+  }
+}
