@@ -1,0 +1,9 @@
+encoder: dinov2_s
+weights: pretrained
+tile_mm: 100.0
+input_px: 448
+features: CLS + mean patch token; sample = mean and std over tiles
+method: linear probe (tile-level softmax head, EMD loss)
+epochs: 200
+lr: 0.01
+wd: 0.001

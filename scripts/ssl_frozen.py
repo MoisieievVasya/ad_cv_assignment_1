@@ -19,14 +19,18 @@ def main():
     ap.add_argument("--weights", help="adapted encoder weights (one encoder only)")
     ap.add_argument("--tag", default="", help="suffix for experiment names, e.g. da_fixed")
     ap.add_argument("--submit", action="store_true", help="write a submission for the ridge model")
+    ap.add_argument("--tile-mm", type=float, default=50)
+    ap.add_argument("--input-px", type=int, default=224)
     args = ap.parse_args()
     labels, folds = load_labels(), pd.read_csv(paths.FOLDS_CSV)
     for enc in args.encoders:
         tag = f"{enc}_{args.tag}" if args.tag else enc
         with compute_log() as c_feat:
-            meta, X = tile_features(enc, weights=args.weights, tag=tag)
+            meta, X = tile_features(enc, weights=args.weights, tag=tag, tile_mm=args.tile_mm, input_px=args.input_px)
+        if args.tile_mm != 50:
+            tag = f"{tag}_ctx{args.tile_mm:g}"
         S = sample_matrix(meta, X)
-        base = {"encoder": enc, "weights": args.weights or "pretrained", "tile_mm": 50, "input_px": 224,
+        base = {"encoder": enc, "weights": args.weights or "pretrained", "tile_mm": args.tile_mm, "input_px": args.input_px,
                 "features": "CLS + mean patch token; sample = mean and std over tiles"}
         for method in ("knn", "ridge"):
             with compute_log() as c:
