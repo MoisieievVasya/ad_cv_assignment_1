@@ -1,0 +1,20 @@
+{
+  "name": "final_tinyvit_scratch_s2",
+  "part": "final",
+  "cv_mean": 37.136,
+  "cv_std": 14.73,
+  "oof_emd": 35.742,
+  "folds": [
+    60.802,
+    42.373,
+    19.146,
+    39.236,
+    24.121
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.1613,
+    "gpu_hours": 0.1613,
+    "peak_mem_gb": 0.388
+  }
+}
