@@ -416,3 +416,13 @@ no difference (42.2 vs 42.8), so this position effect is not robust. It is teste
 trained models in Block 4 (centre vs border tiles).
 **Decision.** Frozen SSL encoders are re-scored at 100 mm / 448 px. Whether fine-tuned ViTs / SSL
 models also gain from 100 mm context is a new hypothesis (training at 448 px costs ~4×).
+
+### H2.8 — Does 100 mm context help *trained* models too? (configs/ctx100.yaml, written before the runs)
+Known when writing: frozen DINOv2 gains 6.7 from 100 mm context (H3.5); a ResNet-18 *AdamW* at
+100 mm / 450 px was not better than at 50 mm (46.5 vs 45.7, Block 1); MAE-B LP-FT at 50 mm = 40.95.
+**Hypothesis.** The gain is specific to pretrained transformers: their features describe objects and
+arrangements, which need context. The scratch ViT and the CNN learn local texture statistics,
+which a 50 mm tile already contains (cf. H0.4).
+**Prediction.** Pretrained ViT-S, DINOv3-S FT and MAE-B LP-FT each improve by ≥ 3 EMD at 100 mm;
+ResNet-18 SGD and the scratch ViT change by < 2. MAE-B LP-FT at 100 mm becomes the best single model
+(≤ 37). Cost ≈ 3–4× the 50 mm runs.

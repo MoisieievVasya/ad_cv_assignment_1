@@ -1,0 +1,14 @@
+# H2.8 — the best recipe of each family re-trained with 100 mm context (448 px at 4.5 px/mm, so one
+# 16 px ViT patch still covers 3.6 mm, as at 50 mm / 224 px). Everything else identical to the 50 mm runs.
+tile_mm: 100
+input_px: 448
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+experiments:
+  - {name: p1_r18_sgd_ctx100, part: "1", arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4}
+  - {name: p2_tinyvit_scratch_ctx100, part: "2", arch: tiny_vit, pretrained: false, optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2}
+  - {name: p2_vits_ctx100, part: "2", arch: vit_small_patch16_224.augreg_in21k_ft_in1k, optimizer: adamw, lr: 1.0e-4, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1}
+  - {name: p3_dinov3_s_ft_ctx100, part: "3", arch: vit_small_patch16_dinov3.lvd1689m, optimizer: adamw, lr: 2.0e-5, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1}
+  - {name: p3_mae_b_lpft_ctx100, part: "3", arch: vit_base_patch16_224.mae, optimizer: adamw, lr: 1.0e-5, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1, lp_epochs: 3, lp_lr: 1.0e-3, batch_size: 16}
