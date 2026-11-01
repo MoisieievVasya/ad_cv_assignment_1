@@ -354,3 +354,24 @@ scratch ViT has no prior at all, so it should degrade fastest when training samp
 **Prediction.** With 50 % of each fold's training samples (≈ 9–10 samples): scratch ViT +6 to +10 EMD,
 ResNet-18 SGD +4 to +8, DINOv3-S FT +2 to +5. At 50 % the ranking flips and DINOv3-S FT is the best
 of the three. At 75 % all three move by less than half of their 50 % change.
+
+### Sanity block S — results
+
+| | Prediction | Result | Verdict |
+|---|---|---|---|
+| HS.1 leaky photo split, ResNet-18 SGD | ≤ 22, ≥ 15 better than honest | **25.2** vs 36.5 honest (OOF): 11 better | **Direction confirmed, size over-predicted** |
+| HS.2 public DINOv2 pipeline on our site folds | 42–46; validation (b) explains more than context (a); outer-α ≥ 2 optimistic | **40.5** (nested α) vs our 49.0; on sample folds 35.2 (they report 34.7); outer α 40.3 | **Wrong**: context/input (a) is worth ≈ 8.5 EMD, site grouping ≈ 5, α choice ≈ 0.2 |
+
+**HS.1 — why.** With other photos of the same tray in training, the network recognises the tray:
+samples it can memorise drop to 4–8 EMD (H371 14.8 → 3.8, H374 39.8 → 7.6, H493 23.3 → 4.2), while
+soils that differ between photos (H126, H030) do not improve. A reported "validation EMD 17"
+with ResNet-50 (more capacity than ResNet-18, and our ResNet-50 reaches 16 on its *training*
+samples) is consistent with such a split plus picking the best epoch on the validation set. Our
+site-grouped CV stays the only number we use.
+
+**HS.2 — why it was wrong, and what it changes.** The public pipeline differs from ours in three
+ways at once: 104 mm instead of 50 mm context, 518 px at 5 px/mm instead of 224 px at 4.5 px/mm,
+and the [CLS] token only (we used [CLS] + mean patch token). Together they are worth ~8.5 EMD for frozen
+DINOv2. Validation choices explain the rest of the gap to 34.7 (site vs sample folds ≈ 5,
+outer-fold α ≈ 0.2, fold-seed search: not measured). Which of the three input factors matters is
+tested next (H3.5), before any Block 2/3 model is re-run with larger crops.
