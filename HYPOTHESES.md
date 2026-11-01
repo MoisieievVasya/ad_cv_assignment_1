@@ -375,3 +375,14 @@ and the [CLS] token only (we used [CLS] + mean patch token). Together they are w
 DINOv2. Validation choices explain the rest of the gap to 34.7 (site vs sample folds ≈ 5,
 outer-fold α ≈ 0.2, fold-seed search: not measured). Which of the three input factors matters is
 tested next (H3.5), before any Block 2/3 model is re-run with larger crops.
+
+### H3.5 — Which input factor makes frozen DINOv2 8.5 EMD better? (written before the ablation)
+Frozen DINOv2-S, nested ridge, site folds; one factor changed at a time, all crops on our grid of
+the tray-cropped cache unless stated.
+**Hypothesis.** Context dominates: a 50 mm crop shows at most a few gravel clasts and no
+arrangement, while the encoder was trained on object-centric scenes where 100 mm of soil looks like
+"a surface". Pixel density (4.5 vs 5 px/mm) and the token readout ([CLS] vs [CLS] + mean patch) are
+second-order. Five fixed crops vs the full grid should not matter (both average over the photo).
+**Prediction.** 100 mm at 4.5 px/mm (448 px) improves on 50 mm (224 px) by ≥ 5. [CLS]-only vs
+[CLS] + mean differs by ≤ 2 at either size. 104 mm at 5 px/mm (518 px) on the full grid is within
+± 1.5 of the 5-crop replication (40.5). 25 mm (112 px) is worse than 50 mm by ≥ 3.
