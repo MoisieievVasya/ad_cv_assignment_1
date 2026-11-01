@@ -1,0 +1,20 @@
+{
+  "name": "p1_r50",
+  "part": "1",
+  "cv_mean": 44.961,
+  "cv_std": 13.352,
+  "oof_emd": 43.146,
+  "folds": [
+    60.233,
+    60.982,
+    31.827,
+    41.544,
+    30.221
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.4651,
+    "gpu_hours": 0.4651,
+    "peak_mem_gb": 1.997
+  }
+}

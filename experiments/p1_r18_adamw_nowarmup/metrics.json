@@ -1,0 +1,20 @@
+{
+  "name": "p1_r18_adamw_nowarmup",
+  "part": "1",
+  "cv_mean": 44.325,
+  "cv_std": 15.482,
+  "oof_emd": 41.862,
+  "folds": [
+    60.626,
+    65.051,
+    28.391,
+    37.436,
+    30.121
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0937,
+    "gpu_hours": 0.0937,
+    "peak_mem_gb": 0.658
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "p3_mae_b_lpft",
+  "part": "3",
+  "cv_mean": 40.947,
+  "cv_std": 15.307,
+  "oof_emd": 39.677,
+  "folds": [
+    64.661,
+    46.857,
+    23.577,
+    44.757,
+    24.884
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.8824,
+    "gpu_hours": 0.8824,
+    "peak_mem_gb": 3.751
+  }
+}

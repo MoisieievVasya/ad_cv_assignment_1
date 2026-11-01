@@ -1,0 +1,20 @@
+{
+  "name": "p3_dinov3_s_lora8",
+  "part": "3",
+  "cv_mean": 45.643,
+  "cv_std": 17.451,
+  "oof_emd": 43.668,
+  "folds": [
+    68.512,
+    59.315,
+    25.623,
+    49.117,
+    25.647
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.2806,
+    "gpu_hours": 0.2806,
+    "peak_mem_gb": 1.102
+  }
+}

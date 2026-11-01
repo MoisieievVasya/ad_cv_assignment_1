@@ -1,0 +1,14 @@
+{
+  "device": "NVIDIA L4",
+  "hours": 0.1317,
+  "gpu_hours": 0.1317,
+  "peak_mem_gb": 5.146,
+  "checkpoint": "checkpoints/dino_adapt_dinov2_s_rrc.pt",
+  "encoder": "dinov2_s",
+  "mode": "rrc",
+  "epochs": 10,
+  "steps": 100,
+  "batch": 32,
+  "lr": 2e-05,
+  "monitor_every": 2
+}

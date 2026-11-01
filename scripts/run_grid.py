@@ -68,7 +68,8 @@ def main():
     ap.add_argument("--parallel", type=int, default=1)
     ap.add_argument("--only", help="comma-separated experiment names")
     ap.add_argument("--branch", help="push results to results/<branch> (needs GH_TOKEN)")
-    ap.add_argument("--extra", nargs="*", default=[], help="extra arguments for scripts/train.py, e.g. --test")
+    ap.add_argument("--test", action="store_true", help="passed to train.py: also fit on all samples, write a submission")
+    ap.add_argument("--save-checkpoints", action="store_true", help="passed to train.py")
     args = ap.parse_args()
 
     pusher = Pusher(args.branch)
@@ -110,7 +111,8 @@ def main():
         while queue and len(running) < args.parallel:
             config, name = queue.pop(0)
             log = open(logs / f"{name}.log", "w")
-            cmd = [sys.executable, "scripts/train.py", config, "--only", name, "--set", f"num_workers={workers}", *args.extra]
+            cmd = [sys.executable, "scripts/train.py", config, "--only", name, "--set", f"num_workers={workers}",
+                   *(["--test"] if args.test else []), *(["--save-checkpoints"] if args.save_checkpoints else [])]
             running[name] = (subprocess.Popen(cmd, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT), log, time.time())
             print(f"start {name}", flush=True)
         time.sleep(10)

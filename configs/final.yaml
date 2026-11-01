@@ -1,0 +1,12 @@
+# Final models: the best recipe of the CNN and ViT families (+ pretrained ViT-S as the contrast case),
+# re-run with --save-checkpoints --test: fold checkpoints for Parts 4/6 (maps, controls, scale
+# robustness on held-out samples) and a model fitted on all 24 samples for the test set (Part 7).
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+experiments:
+  - {name: final_r18_sgd, part: "final", arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4}
+  - {name: final_tinyvit_scratch, part: "final", arch: tiny_vit, pretrained: false, input_px: 224, optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2}
+  - {name: final_vits, part: "final", arch: vit_small_patch16_224.augreg_in21k_ft_in1k, input_px: 224, optimizer: adamw, lr: 1.0e-4, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1}

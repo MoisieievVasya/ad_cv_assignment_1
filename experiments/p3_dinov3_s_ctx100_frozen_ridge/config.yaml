@@ -1,0 +1,12 @@
+encoder: dinov3_s
+weights: pretrained
+tile_mm: 100.0
+input_px: 448
+features: CLS + mean patch token; sample = mean and std over tiles
+method: ridge
+chosen_per_fold:
+- 1
+- 100
+- 100
+- 1000
+- 1000

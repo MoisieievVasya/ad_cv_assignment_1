@@ -1,0 +1,15 @@
+# Part 6 — data efficiency: the best recipe of each family trained on 50 % / 75 % of each fold's training
+# samples (same subsample for every model, seeded by fold), validated on the full held-out fold.
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+warmup_epochs: 1
+part: "6"
+experiments:
+  - {name: p6_r18_sgd_frac50, arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, train_frac: 0.5}
+  - {name: p6_r18_sgd_frac75, arch: resnet18.a1_in1k, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4, train_frac: 0.75}
+  - {name: p6_tinyvit_frac50, arch: tiny_vit, pretrained: false, input_px: 224, optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2, train_frac: 0.5}
+  - {name: p6_tinyvit_frac75, arch: tiny_vit, pretrained: false, input_px: 224, optimizer: adamw, lr: 5.0e-4, weight_decay: 0.05, warmup_epochs: 2, train_frac: 0.75}
+  - {name: p6_dinov3_s_ft_frac50, arch: vit_small_patch16_dinov3.lvd1689m, input_px: 224, optimizer: adamw, lr: 2.0e-5, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1, train_frac: 0.5}
+  - {name: p6_dinov3_s_ft_frac75, arch: vit_small_patch16_dinov3.lvd1689m, input_px: 224, optimizer: adamw, lr: 2.0e-5, weight_decay: 0.05, llrd: 0.75, drop_path: 0.1, train_frac: 0.75}

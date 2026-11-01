@@ -1,0 +1,20 @@
+{
+  "name": "p3_dinov2_s_lpft",
+  "part": "3",
+  "cv_mean": 43.116,
+  "cv_std": 16.207,
+  "oof_emd": 41.642,
+  "folds": [
+    65.177,
+    48.08,
+    22.251,
+    53.221,
+    26.852
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.5227,
+    "gpu_hours": 0.5227,
+    "peak_mem_gb": 2.022
+  }
+}

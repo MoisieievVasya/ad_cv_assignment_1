@@ -192,7 +192,12 @@ def get_device():
 
 
 def amp_dtype():
-    return torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+    """bf16 only where the hardware has it (compute capability >= 8: A100, L4, RTX 30xx+). On a T4 (7.5)
+    `is_bf16_supported()` can still return True because of emulation, which is many times slower: use fp16
+    (+ GradScaler) there."""
+    if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+        return torch.bfloat16
+    return torch.float16
 
 
 def lr_factor(step, total, warmup, schedule):
@@ -357,4 +362,35 @@ def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoi
     if verbose:
         print(f"[{name}] CV {metrics['cv_mean']:.2f} ± {metrics['cv_std']:.2f}  ({compute['hours'] * 60:.1f} min, "
               f"peak {compute.get('peak_mem_gb', 0):.1f} GB)")
+    return metrics
+
+
+def run_photo_split_cv(name, cfg, part, n_folds=5, seed=0):
+    """LEAKY control (HS.1): folds over *photos*, so other photos of a validation sample are in training.
+    Held-out photos are predicted per fold; a sample's curve is the mean over all its held-out photos.
+    Exists only to show what a non-grouped split does to the score."""
+    from dataclasses import replace
+    cfg = merge_config(cfg)
+    device = get_device()
+    data = Data.load()
+    train_photos = data.photos[data.photos.split == "train"].reset_index(drop=True)
+    fold = np.random.default_rng(seed).permutation(len(train_photos)) % n_folds
+    acc, n = {}, {}
+    with compute_log() as compute:
+        for k in range(n_folds):
+            seed_all(int(cfg["seed"] + k))
+            tr_ph, va_ph = train_photos[fold != k], train_photos[fold == k]
+            d_tr = replace(data, photos=tr_ph)
+            model, _ = train_one(d_tr, sorted(tr_ph.sample_id.unique()), cfg, device)
+            for pid, s in zip(va_ph.photo_id, va_ph.sample_id):  # one curve per held-out photo
+                curve = predict_samples(model, replace(data, photos=va_ph[va_ph.photo_id == pid]), [s], "train",
+                                        cfg, *model.mean_std, device)[COLS].to_numpy()[0]
+                acc[s], n[s] = acc.get(s, 0) + curve, n.get(s, 0) + 1
+            print(f"[{name}] fold {k} done", flush=True)
+            del model
+            torch.cuda.empty_cache()
+    oof = pd.DataFrame({s: acc[s] / n[s] for s in acc}, index=COLS).T
+    metrics = save_experiment(name, {**cfg, "split": f"LEAKY random {n_folds}-fold over photos, seed {seed}"},
+                              oof, data.labels, data.folds, compute, part=part)
+    print(f"[{name}] OOF EMD {metrics['oof_emd']:.2f} (leaky photo split)")
     return metrics
