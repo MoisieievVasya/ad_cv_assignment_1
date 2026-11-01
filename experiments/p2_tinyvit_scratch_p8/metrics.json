@@ -1,0 +1,20 @@
+{
+  "name": "p2_tinyvit_scratch_p8",
+  "part": "2",
+  "cv_mean": 39.457,
+  "cv_std": 13.605,
+  "oof_emd": 38.499,
+  "folds": [
+    61.442,
+    43.926,
+    25.151,
+    41.864,
+    24.905
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.0877,
+    "gpu_hours": 0.0877,
+    "peak_mem_gb": 1.242
+  }
+}
