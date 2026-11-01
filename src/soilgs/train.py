@@ -207,6 +207,9 @@ def train_one(data, train_ids, cfg, device, val_ids=None):
         model = get_peft_model(model, LoraConfig(r=cfg["lora_r"], lora_alpha=2 * cfg["lora_r"], target_modules=["qkv"],
                                                  lora_dropout=0.0, modules_to_save=["head"]))
     model = model.to(device)
+    if device.type == "cuda" and not any(k in cfg["arch"] for k in ("vit", "deit", "swin", "maxvit")):
+        model = model.to(memory_format=torch.channels_last)  # ~20 % faster convolutions under autocast
+        torch.backends.cudnn.benchmark = True
     ds = TileTrainSet(data, train_ids, cfg, mean, std)
     if cfg["samples_per_batch"]:
         loader = DataLoader(ds, batch_sampler=GroupedBatchSampler(len(ds.samples), cfg["batch_size"], cfg["steps_per_epoch"],
