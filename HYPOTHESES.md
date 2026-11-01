@@ -68,3 +68,36 @@ when test photos are used at native resolution, and ≥ 8 of 10 when they are re
 4.5 px/mm. (The Münster cobble sample may stay outside: it is coarser than anything in training.)
 **Experiment.** Compute the statistic on all photos both ways and count test samples inside
 [min, max] of the training samples.
+
+### Block 0 — results (notebooks/00_eda_metric_validation.ipynb)
+
+| | Prediction | Result | Verdict |
+|---|---|---|---|
+| H0.1 | 2× scale error ≈ 30 EMD, ±10 between samples, cheaper for clay-rich soils; steep curves *not* costlier | 29.8 ± 0.5 (27.8–30.1); k = 0.5 → 29.2; 100·log10(k) matches for every k; corr with % < 0.002 mm −0.28, with log(D60/D10) −0.39 | **Confirmed**, and tighter than predicted |
+| H0.2 | 0.02–2 mm intervals ≥ 60 % of mean-curve EMD, ≥ 20 mm < 5 % | 62 % and 4.4 %; 2–6.3 mm alone is another 17 % | **Confirmed** |
+| H0.3 | site-grouped CV worse than sample-grouped by 1–4 EMD, fold std ≥ 5 | 40.97 ± 1.55 vs 36.47 ± 1.06 over 5 seeds (gap 4.5); fold std 13.1 vs 9.3 | **Confirmed** (gap slightly above the range) |
+| H0.4 | 25 mm tiles ≥ 3 EMD worse than 50/100 mm, loss on gravelly samples | 38.55 / 38.17 / 38.15; gravelly samples 33.7 / 31.4 / 30.7 | **Wrong** |
+| H0.5 | ≤ 3/10 test samples in train range at native px, ≥ 8/10 after resampling | 8/10 native, 7/10 resampled | **Wrong as measured**, see below |
+
+**Why H0.4 was wrong.** The texture baseline averages per-tile statistics over the whole photo
+(88 tiles of 25 mm vs 8 of 100 mm), so the photo-level feature is almost the same whatever the tile
+size: a 30 mm stone that does not fit into one 25 mm tile still shows up as strong 8–16 mm DoG
+energy in the tiles that cut through it. Tile size matters for *what one tile can see*, which
+matters for a model that predicts from one tile at a time (the CNN/ViT), not for averaged
+hand-crafted statistics. The question is re-tested for the deep models (input context ablation in
+Part 1). Decision: 50 mm tiles (= 225 px at 4.5 px/mm, the native input size of ImageNet models,
+no resizing).
+
+**Why H0.5 was wrong — and what it showed instead.** "Inside the training range" was the wrong
+test. At native resolution the test sands have a pixel texture scale of 2.69–2.89 log2 px, the
+same as the training *gravels* H181, H183, H371, H615 (only 23–37 % < 2 mm; across training
+samples the pixel centroid correlates −0.88 with % < 2 mm). So a pixel-indexed model would see
+the test sands as in-distribution and call them gravel. After resampling to 4.5 px/mm the sands
+move to 1.75–2.32, next to the fine training soils. Also, the Münster cobbles (3.55) and Testfeld
+(2.94) stay at the coarse end in both versions. This is the strongest argument for the mm-calibrated pipeline:
+the risk is not out-of-range inputs but in-range inputs that mean something else.
+
+**Other Block 0 facts used later.** Train and test devices are disjoint (Motorola/Samsung vs
+iPhone), test photos are 3–4× sharper than training photos. The mean-curve baseline on the shared
+folds is 93.4 ± 9.6. The texture ridge reaches 38.2 ± 14.6. The left-point and trapezoid metric
+variants rank samples identically (Spearman 0.999).

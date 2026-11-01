@@ -1,0 +1,20 @@
+{
+  "name": "p0_mean_curve",
+  "part": "0",
+  "cv_mean": 93.414,
+  "cv_std": 9.578,
+  "oof_emd": 94.683,
+  "folds": [
+    80.026,
+    96.396,
+    109.008,
+    93.457,
+    88.182
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0,
+    "gpu_hours": 0.0,
+    "peak_mem_gb": 0.0
+  }
+}

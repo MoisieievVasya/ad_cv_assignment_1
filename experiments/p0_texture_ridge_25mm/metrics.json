@@ -1,0 +1,20 @@
+{
+  "name": "p0_texture_ridge_25mm",
+  "part": "0",
+  "cv_mean": 38.55,
+  "cv_std": 13.281,
+  "oof_emd": 37.751,
+  "folds": [
+    60.847,
+    44.11,
+    27.104,
+    36.983,
+    23.707
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0,
+    "gpu_hours": 0.0,
+    "peak_mem_gb": 0.0
+  }
+}

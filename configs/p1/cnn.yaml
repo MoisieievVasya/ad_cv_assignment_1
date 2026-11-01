@@ -1,0 +1,40 @@
+# Part 1 — CNNs. Shared recipe at top level; each experiment overrides only what it ablates.
+# Baseline recipe: ImageNet ResNet-18, AdamW 3e-4, wd 0.05 (not on norms/biases), 1 warm-up epoch + cosine,
+# 15 x 100 steps of 32 random 50 mm tiles (225 px at 4.5 px/mm), flips + 90° rotations, EMD loss.
+part: "1"
+arch: resnet18.a1_in1k
+tile_mm: 50
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+optimizer: adamw
+lr: 3.0e-4
+weight_decay: 0.05
+warmup_epochs: 1
+norm: bn
+experiments:
+  # --- optimiser / schedule
+  - {name: p1_r18_adamw}
+  - {name: p1_r18_sgd, optimizer: sgd, lr: 0.01, weight_decay: 1.0e-4}
+  - {name: p1_r18_adamw_nowarmup, warmup_epochs: 0}
+  - {name: p1_r18_adamw_lr1e-3, lr: 1.0e-3}
+  # --- BatchNorm with tiles of few physical samples
+  - {name: p1_r18_bn_k2, samples_per_batch: 2}
+  - {name: p1_r18_frozenbn, norm: frozen_bn}
+  - {name: p1_r18_frozenbn_k2, norm: frozen_bn, samples_per_batch: 2}
+  - {name: p1_r18_gn, norm: gn}
+  # --- augmentations (scale and blur are label-destroying by design)
+  - {name: p1_r18_noaug, aug_flip: false, aug_rot90: false}
+  - {name: p1_r18_color, aug_color: 0.2}
+  - {name: p1_r18_scaleaug, aug_scale: [0.5, 2.0]}
+  - {name: p1_r18_blur, aug_blur: 2.0}
+  # --- input resolution / context (same mm/px for train and test)
+  - {name: p1_r18_res112, input_px: 112}
+  - {name: p1_r18_tile100, tile_mm: 100, batch_size: 16}
+  # --- loss and pretraining
+  - {name: p1_r18_sqrtmse, loss: sqrt_mse}
+  - {name: p1_r18_scratch, pretrained: false, arch: resnet18}
+  # --- stronger architectures with the baseline recipe
+  - {name: p1_r50, arch: resnet50.a1_in1k}
+  - {name: p1_effb0, arch: efficientnet_b0.ra_in1k}
+  - {name: p1_convnext_t, arch: convnext_tiny.fb_in22k_ft_in1k, lr: 1.0e-4}

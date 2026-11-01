@@ -1,0 +1,6 @@
+model: ridge
+alpha: 10
+target: sqrt_mass
+features: texture (23)
+tile_mm: 25
+ppm: 4.5
