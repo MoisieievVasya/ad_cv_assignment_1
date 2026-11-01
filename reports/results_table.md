@@ -155,3 +155,8 @@ Mean-curve baseline 93.4, uniform curve 102.
 | rep_p3_dinov3_s_ft_s1 | 41.74 ± 17.23 | 41.12 |  |  | 0.371 | NVIDIA L4 |
 | rep_p3_dinov3_s_ft_s2 | 41.74 ± 17.12 | 41.11 |  |  | 0.371 | NVIDIA L4 |
 
+## Other submissions
+
+| submission | public LB | private LB |
+|---|---|---|
+| final_ensemble_guard.csv (CV 36.39 ± 15.54, `notebooks/06_comparison_ensemble.ipynb`) | 56.39 | revealed after 2026-11-30 |

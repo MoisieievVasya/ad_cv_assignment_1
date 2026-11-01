@@ -57,7 +57,7 @@ def main():
     subs = lb[~lb.experiment.isin(df.experiment)]
     if len(subs):
         out += ["## Other submissions", "", "| submission | public LB | private LB |", "|---|---|---|"]
-        out += [f"| {r.submission} | {r.public_lb} | {r.private_lb} |" for r in subs.itertuples()]
+        out += [f"| {r.submission} | {r.public_lb:.2f} | {'' if pd.isna(r.private_lb) else r.private_lb} |" for r in subs.itertuples()]
     (paths.ROOT / "reports" / "results_table.md").write_text("\n".join(out) + "\n")
 
     log = df[["part", "experiment", "device", "gpu_hours", "hours", "peak_mem_gb"]].sort_values(["part", "experiment"])

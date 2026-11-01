@@ -13,7 +13,7 @@ cumulative % of mass passing 11 sieves (0.002–200 mm).
 | MAE-B, LP-FT (best SSL tuning) | 41.0 ± 15.3 | — |
 | DINOv2-S frozen, 100 mm crops + ridge (best frozen SSL) | 42.3 ± 15.9 | — |
 | hand-crafted mm-indexed texture + ridge | 38.2 ± 14.6 | — |
-| **final: diverse 4-model ensemble + extrapolation guard** | **36.39 ± 15.5** | |
+| **final: diverse 4-model ensemble + extrapolation guard** | **36.39 ± 15.5** | public LB **56.39** |
 
 The ± is the std over the 5 site folds (fold difficulty), not noise: seed-to-seed std is 0.2–0.7, so
 differences under ~2 EMD between configurations are not effects. Leaderboard scores: [results table](reports/results_table.md).
@@ -315,7 +315,15 @@ is 0.34–0.49 between the scratch ViT and every other model, and 0.69–0.88 am
 The ensemble gains only 0.1 over the best single model (predicted 2–4). It cannot fix the errors every member shares
 (H037/H038/H616 ≈ 35 % of the total), and adding weaker members costs more than their diversity gains.
 **Final submission, chosen by CV with a rule fixed before any leaderboard score:** the pre-declared diverse ensemble +
-the extrapolation guard, `submissions/final_ensemble_guard.csv`.
+the extrapolation guard, `submissions/final_ensemble_guard.csv`. **Public LB 56.39** (private LB is revealed when the
+competition ends). It was the only submission, so no model was selected on the leaderboard.
+
+**Why the leaderboard is much worse than CV (56.4 vs 36.4).** The public part of the test set has only ~3 samples.
+The test differs from training in every way our controls flagged as fragile: new sites, other phones (iPhone; colour
+is a large signal, Part 4), native resolution with different JPEG compression (only the resolution is equalised),
+and one cobble sample outside the training range. The same kind of shift costs public notebooks similar
+amounts: a 5-feature texture model reports LB 57.5 vs leave-one-site-out CV 47.5. Our CV estimates performance on
+*new sites photographed like the training set*, not on a new acquisition setup.
 
 ## Sanity checks: are we doing something wrong?
 * *A classmate's "validation EMD 17" with ResNet-50* vs our 45: the same ResNet-18 recipe scores 25.2
