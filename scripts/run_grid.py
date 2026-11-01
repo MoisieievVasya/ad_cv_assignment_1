@@ -101,6 +101,7 @@ def main():
     queue = [q for q in queue if not done(q[1])]
     if skipped:
         print("already done, skipped:", ", ".join(skipped), flush=True)
+        pusher.push(f"sync finished experiments: {', '.join(skipped)}")
     workers = max(2, (os.cpu_count() or 4) // max(args.parallel, 1) - 1)
     print(f"{len(queue)} experiments, {args.parallel} in parallel, {workers} data workers each", flush=True)
 
