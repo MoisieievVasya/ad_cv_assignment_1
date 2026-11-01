@@ -20,6 +20,7 @@ part,experiment,device,gpu_hours,hours,peak_mem_gb
 1,p1_r18_scaleaug,NVIDIA GeForce RTX 5070 Laptop GPU,0.0953,0.0953,0.658
 1,p1_r18_scratch,NVIDIA L4,0.1776,0.1776,0.655
 1,p1_r18_sgd,NVIDIA GeForce RTX 5070 Laptop GPU,0.0944,0.0944,0.616
+1,p1_r18_sgd_gn,NVIDIA L4,0.1687,0.1687,1.073
 1,p1_r18_sqrtmse,NVIDIA L4,0.1723,0.1723,0.655
 1,p1_r18_tile100,NVIDIA L4,0.2758,0.2758,1.051
 1,p1_r50,NVIDIA L4,0.4651,0.4651,1.997
@@ -95,8 +96,13 @@ S,s_public_dinov2_sample_nested,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017
 S,s_public_dinov2_sample_outer_alpha,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
 S,s_public_dinov2_site_nested,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
 S,s_public_dinov2_site_outer_alpha,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
+final,final_mae_b_lpft,NVIDIA A100-SXM4-40GB,0.254,0.254,3.751
 final,final_r18_sgd,NVIDIA GeForce RTX 5070 Laptop GPU,0.2686,0.2686,0.61
+final,final_r18_sgd_s1,NVIDIA L4,0.2028,0.2028,0.611
+final,final_r18_sgd_s2,NVIDIA L4,0.2023,0.2023,0.611
 final,final_tinyvit_scratch,NVIDIA GeForce RTX 5070 Laptop GPU,0.142,0.142,0.378
+final,final_tinyvit_scratch_s1,NVIDIA L4,0.162,0.162,0.388
+final,final_tinyvit_scratch_s2,NVIDIA L4,0.1613,0.1613,0.388
 final,final_vits,NVIDIA GeForce RTX 5070 Laptop GPU,0.4539,0.4539,1.531
 rep,rep_p2_tinyvit_scratch_s1,NVIDIA L4,0.1576,0.1576,0.388
 rep,rep_p2_tinyvit_scratch_s2,NVIDIA L4,0.1573,0.1573,0.388

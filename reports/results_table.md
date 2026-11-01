@@ -18,6 +18,7 @@ Mean-curve baseline 93.4, uniform curve 102.
 
 | experiment | CV | OOF | public LB | private LB | GPU-h | device |
 |---|---|---|---|---|---|---|
+| p1_r18_sgd_gn | 36.39 ± 13.35 | 35.64 |  |  | 0.169 | NVIDIA L4 |
 | p1_r18_sgd | 37.91 ± 15.09 | 36.48 |  |  | 0.094 | NVIDIA GeForce RTX 5070 Laptop GPU |
 | p1_r18_gn | 38.41 ± 14.42 | 36.84 |  |  | 0.121 | NVIDIA GeForce RTX 5070 Laptop GPU |
 | p1_r18_scratch | 39.32 ± 14.55 | 38.21 |  |  | 0.178 | NVIDIA L4 |
@@ -137,6 +138,11 @@ Mean-curve baseline 93.4, uniform curve 102.
 |---|---|---|---|---|---|---|
 | final_r18_sgd | 36.51 ± 14.88 | 35.01 |  |  | 0.269 | NVIDIA GeForce RTX 5070 Laptop GPU |
 | final_tinyvit_scratch | 36.55 ± 14.77 | 35.20 |  |  | 0.142 | NVIDIA GeForce RTX 5070 Laptop GPU |
+| final_tinyvit_scratch_s1 | 37.10 ± 14.65 | 35.71 |  |  | 0.162 | NVIDIA L4 |
+| final_tinyvit_scratch_s2 | 37.14 ± 14.73 | 35.74 |  |  | 0.161 | NVIDIA L4 |
+| final_r18_sgd_s2 | 37.46 ± 14.84 | 36.19 |  |  | 0.202 | NVIDIA L4 |
+| final_r18_sgd_s1 | 37.57 ± 14.16 | 36.23 |  |  | 0.203 | NVIDIA L4 |
+| final_mae_b_lpft | 40.82 ± 15.53 | 39.44 |  |  | 0.254 | NVIDIA A100-SXM4-40GB |
 | final_vits | 47.77 ± 19.10 | 44.42 |  |  | 0.454 | NVIDIA GeForce RTX 5070 Laptop GPU |
 
 ## Seed replicates (noise floor)

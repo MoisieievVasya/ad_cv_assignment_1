@@ -686,3 +686,14 @@ shared failures make up ≈ 35 % of the total error. On the remaining samples av
 weaker members (ViT-S, DINOv3, MAE) costs more than their diversity gains.
 **Final submission (by CV, rule fixed before the leaderboard):** the pre-declared diverse ensemble (36.39 <
 36.51) **+ the extrapolation guard** (H6c), which changes only the Münster sample.
+
+### H1.8 / H7.2 — results
+**H1.8** ResNet-18 SGD + GroupNorm: **36.39 ± 13.35**, within ± 2 of SGD alone (37.9) ✓. The two knobs act on
+the same mechanism (slowing memorisation) and are not additive beyond noise.
+**H7.2** Seed averaging (3 seeds of the all-data recipe, OOF of the matching runs): ResNet-18 SGD single seeds
+36.5 / 37.6 / 37.5 (mean 37.2) → seed-averaged 37.15; scratch ViT 36.6 / 37.1 / 37.1 (mean 36.9) → 36.84.
+Predicted gain 0.3–1.5, **observed 0.03–0.09 (wrong)**. *Why:* seed variance of these small models is
+already tiny (std 0.3–0.7) and almost all the error is shared across seeds (the same hard samples).
+The pre-declared ensemble built from seed-averaged members scores 36.65 vs 36.39 with the seed-0 members.
+By the rule stated before this check (use seed averaging only if CV does not get worse), the final
+submission keeps the seed-0 members. The 0.26 difference is within the seed noise either way.

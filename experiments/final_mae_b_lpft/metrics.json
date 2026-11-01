@@ -1,0 +1,20 @@
+{
+  "name": "final_mae_b_lpft",
+  "part": "final",
+  "cv_mean": 40.824,
+  "cv_std": 15.528,
+  "oof_emd": 39.44,
+  "folds": [
+    64.85,
+    47.452,
+    22.897,
+    44.0,
+    24.918
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.254,
+    "gpu_hours": 0.254,
+    "peak_mem_gb": 3.751
+  }
+}
