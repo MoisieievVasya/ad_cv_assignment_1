@@ -722,3 +722,13 @@ model (`final_vits_nested`, new seeds for the inner models) chose epochs 9, 2, 1
 and scored **43.4** instead of 39.6. Repeating the selection moves the result by ~4 EMD, much more than seed
 noise of plain training (0.2–0.7). The −8 gain of H2.7 is therefore partly luck of the inner split. The
 robust part of the finding is the direction: stopping early helps a pretrained ViT, by 4–8 EMD.
+
+### H6d — the same guard on the fine side (written before the check)
+**Rule.** Symmetric to H6c: for a sample whose texture-scale centroid lies *below* the training minimum, blend in
+the linear quantile model with weight w = clip((c_min,train − c) / 0.5, 0, 1). Known when writing: one test sample
+(Kleinkummerfeld 2-2, c = −0.24 vs training minimum −0.15) would get w ≈ 0.18.
+**Validation ("leave-finest-out").** For each of the 5 finest training samples, train only on samples whose
+centroid is ≥ 0.15 above it, compare texture ridge vs texture ridge + guard.
+**Prediction / decision rule (same as H6c).** Used in the final submission only if the mean gain is ≥ 3 EMD and
+≥ 3 of 5 samples improve. I expect it to fail: fine soils differ mainly in the silt/clay split, which a
+texture-scale centroid at 4.5 px/mm cannot see (one pixel = 0.22 mm), so extrapolating it is noise.
