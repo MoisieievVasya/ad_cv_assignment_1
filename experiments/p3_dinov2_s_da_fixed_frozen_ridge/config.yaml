@@ -1,0 +1,12 @@
+encoder: dinov2_s
+weights: checkpoints/dino_adapt_dinov2_s_fixed_scale.pt
+tile_mm: 50
+input_px: 224
+features: CLS + mean patch token; sample = mean and std over tiles
+method: ridge
+chosen_per_fold:
+- 1000
+- 1000
+- 1000
+- 1
+- 1000
