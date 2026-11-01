@@ -491,3 +491,72 @@ the benefit. The scratch ViT does not overfit, so it does not care where it stop
 CNN/ViT recipe comparison: training length matters more than any other optimisation knob for
 pretrained *ViTs* on this dataset. For CNNs the SGD optimiser does a similar job (slower fitting:
 ResNet-18 SGD 37.9 without early stopping).
+
+### Block 1 — results (19 CNN runs + nested / 100 mm follow-ups; noise floor: seed std ≈ 0.2–0.7, fold std ≈ 15)
+
+| | Prediction | Result | Verdict |
+|---|---|---|---|
+| H1.1 | ResNet-18 AdamW 34–42; R50 ≈ R18 (± 2); ConvNeXt-T best CNN by < 4; EffNet-B0 ≈ R18 | R18 AdamW 45.7, R50 45.0, ConvNeXt-T 46.5, EffNet-B0 49.9; best CNN = **R18 SGD 37.9** | R50 ≈ R18 ✓; rest **wrong**: bigger/better-ImageNet nets do not help |
+| H1.2 | SGD vs AdamW within 2; no warm-up within 1; lr 1e-3 ≥ 2 worse | SGD **37.9** vs AdamW 45.7; no warm-up 44.3; lr 1e-3 47.1 | **Wrong** for SGD (−7.8); warm-up/LR within noise |
+| H1.3 | BN with 2-sample batches ≥ 3 worse; frozen BN closes the gap; GN 1–3 worse than frozen BN | BN-k2 46.8 (+1.1), frozen BN 44.0, frozen BN-k2 39.7, **GN 38.4** | **Wrong**: no batch-composition penalty beyond noise; GN is the best BN variant |
+| H1.4 | no aug ≥ 1 worse; colour neutral; scale aug ≥ 5 worse; blur ≥ 2 worse | no aug 43.3, colour 44.0, scale aug 42.4, blur 42.4 (base 45.7) | colour ✓; the "label-destroying" augs did **not** hurt (**wrong**) |
+| H1.5 | 112 px ≥ 3 worse; 100 mm within ± 2 | 112 px 41.7 (better), 100 mm 46.5 | 100 mm ✓, resolution **wrong** |
+| H1.6 | EMD loss ≥ 2 better than sqrt-MSE | 45.7 vs 45.9 | **Wrong** (no difference) |
+| H1.7 | R18 from scratch 50–75 | **39.3**, better than ImageNet R18 with AdamW | **Wrong** |
+
+**Why — one picture behind almost all misses.** The pretrained CNN with AdamW memorises the 19
+training samples within ~3 epochs (train EMD → 10–13, validation EMD rises from its minimum ~39 to
+~46; ResNet-50: 16 on training samples at epoch 6). From there, *anything that slows memorisation helps*.
+That covers SGD (37.9), swapping BN for GroupNorm (38.4; the BN-calibrated pretrained weights are partly
+de-calibrated), starting from scratch (39.3), lower resolution (41.7), and the "label-destroying"
+scale/blur augmentations (42.4: they inject noise the network cannot memorise). Bigger ImageNet models
+(R50, ConvNeXt, EffNet) memorise *more*. The predictions assumed that the networks *measure grain
+size* and are limited by information. In practice they are limited by overfitting, and grain-size
+precision is not what they exploit: if it were, ×[0.5, 2] scale noise would cost ~20 EMD (Block 0),
+not −3.
+**Inductive biases of CNNs on soil texture.** *Helpful:* locality and weight sharing (a stationary
+texture statistic can be learned from 19 samples; ResNet-18 *from scratch* reaches 39.3). Global
+average pooling also helps: it averages a texture statistic over the tile, matching how the label is
+defined. *Harmful here:* ImageNet object features plus capacity, which make it easy to recognise the
+individual tray instead of its grain size.
+**BatchNorm with tiles of few samples.** Batches drawn from only 2 samples did not hurt measurably
+(46.8 vs 45.7 with train-mode BN; 39.7 vs 44.0 with frozen BN, inside the ±15 fold noise). With
+19 samples × many tiles, BN's statistics in a 2-sample batch are biased towards those trays: the
+model learns slightly batch-dependent features, but evaluation uses running statistics averaged over
+all batches. The effect is real in principle and too small to detect against the overfitting effect.
+GroupNorm removes the question entirely and was the best normalisation (38.4).
+
+### Block 3 — results (frozen / LP / LP-FT / FT / LoRA; before and after DINO domain adaptation)
+
+| | frozen k-NN | frozen ridge | ridge 100 mm | linear probe | LP-FT | full FT | LoRA r=8 |
+|---|---|---|---|---|---|---|---|
+| DINOv2-S | 52.4 | 49.0 | **42.3** | 61.0 | 43.1 | 45.5 (nested 42.4) | 46.6 |
+| DINOv3-S | 51.6 | 45.8 | 46.5 | 56.3 | 43.2 | **42.2** | 45.6 |
+| MAE-B | 43.6 | 45.1 | 44.3 | 62.7 | **41.0** | 46.9 | — |
+| DINOv2-S after DA, scale-preserving views | 47.0 | 50.0 | — | 65.4 | 47.3 | — | — |
+| DINOv2-S after DA, standard multi-crop | 46.9 | 48.9 | — | 63.0 | 46.6 | — | — |
+
+| | Prediction | Verdict |
+|---|---|---|
+| H3.1 | DINOv2 ridge 36–42; DINOv3 within ± 3; MAE ≥ 5 worse; k-NN ≥ 3 worse than ridge; LP ≈ ridge | DINOv2 49.0 at 50 mm (**wrong**), 42.3 at 100 mm ✓; DINOv3 −3.2 (borderline); MAE **better** (45.1, **wrong**); k-NN worse for DINOv2/v3 ✓, better for MAE ✗; tile-level LP 56–63 (**wrong**) |
+| H3.2 | FT ≥ 2 worse than frozen; LP-FT ≥ 2 better than FT ≈ frozen; LoRA ≈ LP-FT | MAE: FT 46.9 worse than frozen 45.1 ✓, LP-FT 41.0 (−5.9) ✓; DINOv2: LP-FT −2.4 vs FT ✓, but FT better than 50 mm-frozen; DINOv3: FT ≈ LP-FT; LoRA 2.4–3.5 worse than LP-FT ✗ |
+| H3.3 | DA with scale-preserving views −1…−3; standard multi-crop no gain and ≥ 1 worse than scale-preserving | **Both hurt**: frozen ridge 49.0 → 50.0 (scale-preserving) / 48.9 (multi-crop); LP-FT 43.1 → 47.3 / 46.6; cost 0.11 / 0.13 L4-hours ✓ | **Wrong** |
+| H3.4 | best SSL within ± 3 of best CNN; ≥ 2 better than best supervised ViT | MAE LP-FT 41.0 vs R18 SGD 37.9 (3.1); vs ViT-S nested 39.6 (worse) | **Wrong** (borderline) |
+
+**Why.** (1) *Frozen features* need context (H3.5: 100 mm, DINOv2-specific). MAE features are
+pixel-level and, contrary to the prediction, they are already reasonable for a texture target.
+(2) *Can fine-tuning be worse than frozen?* Yes, for MAE: full FT 46.9 vs frozen 45.1. And
+DINOv2 frozen at 100 mm (42.3) beats every DINOv2 fine-tuning at 50 mm. LP-FT is the safest tuning
+recipe (best for MAE and DINOv2): starting the encoder update from a fitted head limits the
+feature distortion (Kumar et al.). This was the mechanism predicted (CKA in
+`notebooks/01_results_parts_1_3.ipynb`). The tile-level linear probe is poor because it treats ~4000
+correlated tiles as independent examples with 19 distinct labels and overfits them. The sample-level
+ridge does not have that problem. (3) *Label-destroying augmentations* (by construction): random
+resized crops, zoom, strong blur — anything that changes mm/px or removes fine grains. (4)
+*Domain adaptation failed for both view policies.* With 127 photos of 24 trays, continued DINO
+quickly solves its pretext task (loss 8.2 → 3.6 in 10 epochs). The easiest cue that "two views come
+from the same photo" is the tray's colour, illumination and moisture pattern, not grain size. The
+monitor shows frozen-ridge OOF EMD rising from 45.3 / 44.5 to 48.4 / 47.2 as soon as the backbone
+starts training. Scale-preserving views make that shortcut *easier* (same scale, same tray), which
+is why they hurt slightly more than standard multi-crop. Verdict: DA helped by −1 to −4 EMD (i.e.
+hurt), at ~0.1 L4-hours per run.
