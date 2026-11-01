@@ -738,3 +738,10 @@ training samples, gains −12.4, −0.4, +8.6, −11.7, −5.5 → **mean −4.3
 confirmed). Fine soils differ mainly in their silt/clay split, which the texture-scale centroid at 4.5 px/mm
 (0.22 mm per pixel) does not see; extrapolating it linearly into the clay range adds error. The final
 submission keeps the coarse-side guard only (H6c).
+
+**Block C — decision rule for the submission (added before any Block C result was known).** If grey-world
+(or greyscale) is ≥ 2 better than the baseline on *cross-device* CV and loses ≤ 1.5 on standard CV, the
+pre-declared ensemble is rebuilt with that colour normalisation (ResNet-18 SGD and scratch ViT retrained, texture
+ridge recomputed, DINOv2 member unchanged) and submitted as a **second** final candidate: chosen by cross-device CV,
+the closer proxy of the test shift (new phones). The first final submission stays as it is. Otherwise Block C is
+reported as analysis only.
