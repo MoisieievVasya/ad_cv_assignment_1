@@ -1,0 +1,20 @@
+{
+  "name": "p1_r18_sgd_ctx100",
+  "part": "1",
+  "cv_mean": 39.276,
+  "cv_std": 14.84,
+  "oof_emd": 37.152,
+  "folds": [
+    59.661,
+    51.9,
+    20.127,
+    37.978,
+    26.714
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.6132,
+    "gpu_hours": 0.6132,
+    "peak_mem_gb": 1.934
+  }
+}
