@@ -1,0 +1,20 @@
+{
+  "name": "p2_vits_ctx100",
+  "part": "2",
+  "cv_mean": 51.026,
+  "cv_std": 21.349,
+  "oof_emd": 47.002,
+  "folds": [
+    68.961,
+    79.722,
+    22.498,
+    50.805,
+    33.141
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 1.5086,
+    "gpu_hours": 1.5086,
+    "peak_mem_gb": 4.829
+  }
+}
