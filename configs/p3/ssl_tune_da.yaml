@@ -1,0 +1,19 @@
+# Part 3 — LP-FT after domain adaptation (needs checkpoints from scripts/dino_adapt.py, run locally) (frozen / LP variants: scripts/ssl_frozen.py).
+# Same tiles (50 mm, 224 px), EMD loss, schedule length and folds as Parts 1–2.
+# FT recipe = Part 2 ViT recipe with a 5x smaller LR (SSL features are more general and easier to destroy).
+part: "3"
+tile_mm: 50
+input_px: 224
+epochs: 15
+steps_per_epoch: 100
+batch_size: 32
+optimizer: adamw
+lr: 2.0e-5
+weight_decay: 0.05
+warmup_epochs: 1
+llrd: 0.75
+drop_path: 0.1
+experiments:
+  # After domain adaptation (continued DINO on training tiles), DINOv2-S, both view policies
+  - {name: p3_dinov2_s_da_fixed_lpft, arch: vit_small_patch14_reg4_dinov2.lvd142m, init_weights: checkpoints/dino_adapt_dinov2_s_fixed_scale.pt, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}
+  - {name: p3_dinov2_s_da_rrc_lpft, arch: vit_small_patch14_reg4_dinov2.lvd142m, init_weights: checkpoints/dino_adapt_dinov2_s_rrc.pt, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}

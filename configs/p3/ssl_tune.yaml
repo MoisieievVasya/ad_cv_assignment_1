@@ -25,6 +25,3 @@ experiments:
   # MAE ViT-B/16 (IN-1k, no labels)
   - {name: p3_mae_b_ft, arch: vit_base_patch16_224.mae, batch_size: 32}
   - {name: p3_mae_b_lpft, arch: vit_base_patch16_224.mae, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}
-  # After domain adaptation (continued DINO on training tiles), DINOv2-S, both view policies
-  - {name: p3_dinov2_s_da_fixed_lpft, arch: vit_small_patch14_reg4_dinov2.lvd142m, init_weights: checkpoints/dino_adapt_dinov2_s_fixed_scale.pt, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}
-  - {name: p3_dinov2_s_da_rrc_lpft, arch: vit_small_patch14_reg4_dinov2.lvd142m, init_weights: checkpoints/dino_adapt_dinov2_s_rrc.pt, lp_epochs: 3, lp_lr: 1.0e-3, lr: 1.0e-5}
