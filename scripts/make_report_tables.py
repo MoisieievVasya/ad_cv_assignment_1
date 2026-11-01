@@ -56,7 +56,7 @@ def main():
         out.append("")
     subs = lb[~lb.experiment.isin(df.experiment)]
     if len(subs):
-        out += ["## Other submissions", "", "| submission | public LB | private LB |", "|---|---|---|"]
+        out += ["## Submissions (final, chosen by CV before any LB score)", "", "| submission | public LB | private LB |", "|---|---|---|"]
         out += [f"| {r.submission} | {r.public_lb:.2f} | {'' if pd.isna(r.private_lb) else r.private_lb} |" for r in subs.itertuples()]
     (paths.ROOT / "reports" / "results_table.md").write_text("\n".join(out) + "\n")
 

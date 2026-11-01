@@ -165,7 +165,7 @@ Mean-curve baseline 93.4, uniform curve 102.
 | rep_p3_dinov3_s_ft_s1 | 41.74 ± 17.23 | 41.12 |  |  | 0.371 | NVIDIA L4 |
 | rep_p3_dinov3_s_ft_s2 | 41.74 ± 17.12 | 41.11 |  |  | 0.371 | NVIDIA L4 |
 
-## Other submissions
+## Submissions (final, chosen by CV before any LB score)
 
 | submission | public LB | private LB |
 |---|---|---|

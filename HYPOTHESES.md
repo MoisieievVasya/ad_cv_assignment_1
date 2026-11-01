@@ -768,3 +768,13 @@ the information lost. White balance removes only the global cast, so it lands in
 for one part of the CV → LB gap (test photos: iPhones). **Decision (rule fixed before the results):** grey-world
 gains enough cross-device (2.6 ≥ 2) but loses too much on standard CV (2.2 > 1.5), so no second final candidate
 is built; Block C is reported as analysis. A colour-robust model is the first item for future work.
+
+---
+
+## Final submission
+`submissions/final_ensemble_guard.csv` = equal-weight mean of texture ridge, ResNet-18 SGD, own scratch ViT and frozen
+DINOv2-S at 100 mm (pre-declared in Block 7), plus the coarse-side extrapolation guard (H6c; changes only the Münster
+sample). Chosen by site-grouped CV (36.39 ± 15.54) with rules fixed before any leaderboard score; it is the **only**
+submission made. **Public LB 56.39** (2026-11-01); private LB revealed after 2026-11-30. The gap to CV is discussed in
+the README (new sites and phones — Block C measured +5.7 EMD for a phone change alone — JPEG/resolution differences and
+one cobble sample outside the training range).
