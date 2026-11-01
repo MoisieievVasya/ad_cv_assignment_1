@@ -37,6 +37,7 @@ DEFAULTS = dict(
     lp_epochs=0, lp_lr=1e-3, lora_r=0, init_weights=None,   # SSL tuning: LP-FT, LoRA, adapted weights
     train_frac=1.0,                                          # data efficiency: share of training samples kept
     epoch_selection=None, inner_folds=3, stop_epoch=None,    # 'nested': pick the stopping epoch by inner CV
+    colour_norm=None,                                        # None | 'greyworld' | 'grey' (Block C)
 )
 
 
@@ -308,11 +309,29 @@ def nested_stop_epoch(data, train_ids, cfg, device, site_of):
     return int(mean_curve.idxmin()) + 1, mean_curve.round(2).tolist()
 
 
+def colour_normalise(img, mode):
+    """'greyworld': per-photo white balance (channel means scaled to the photo's mean grey); 'grey': greyscale."""
+    if not mode:
+        return img
+    if mode == "grey":
+        import cv2
+        return np.repeat(cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)[..., None], 3, axis=2)
+    m = img.reshape(-1, 3).mean(0)
+    return np.clip(img.astype(np.float32) * (m.mean() / m), 0, 255).astype(np.uint8)
+
+
+def load_data(cfg):
+    data = Data.load()
+    if cfg.get("colour_norm"):
+        data.images = {k: colour_normalise(v, cfg["colour_norm"]) for k, v in data.images.items()}
+    return data
+
+
 def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoints=False, verbose=True):
     """Full group-CV experiment: OOF curves, per-fold scores, training curves, compute log -> experiments/<name>."""
     cfg = merge_config(cfg)
     device = get_device()
-    data = Data.load()
+    data = load_data(cfg)
     fold_of = data.folds.set_index("sample_id").fold
     oof, histories, chosen_epochs, inner_curves = [], [], [], []
     with compute_log() as compute:
@@ -393,4 +412,38 @@ def run_photo_split_cv(name, cfg, part, n_folds=5, seed=0):
     metrics = save_experiment(name, {**cfg, "split": f"LEAKY random {n_folds}-fold over photos, seed {seed}"},
                               oof, data.labels, data.folds, compute, part=part)
     print(f"[{name}] OOF EMD {metrics['oof_emd']:.2f} (leaky photo split)")
+    return metrics
+
+
+def run_cross_device_cv(name, cfg, part, cameras=("Motorola Edge", "Samsung A52")):
+    """Block C: site folds, but train only on photos of phone A and validate only on photos of phone B
+    (both directions). A sample's curve is the mean over the directions in which it has photos of phone B."""
+    from dataclasses import replace
+    cfg = merge_config(cfg)
+    device = get_device()
+    data = load_data(cfg)
+    fold_of = data.folds.set_index("sample_id").fold
+    ph = data.photos[data.photos.split == "train"]
+    curves = {}
+    with compute_log() as compute:
+        for a, b in (cameras, cameras[::-1]):
+            for k in sorted(int(f) for f in fold_of.unique()):
+                seed_all(int(cfg["seed"] + k))
+                tr_ph = ph[(ph.sample_id.map(fold_of) != k) & (ph.camera == a)]
+                va_ph = ph[(ph.sample_id.map(fold_of) == k) & (ph.camera == b)]
+                if va_ph.empty:
+                    continue
+                model, _ = train_one(replace(data, photos=tr_ph), sorted(tr_ph.sample_id.unique()), cfg, device)
+                pred = predict_samples(model, replace(data, photos=va_ph), sorted(va_ph.sample_id.unique()), "train",
+                                       cfg, *model.mean_std, device)
+                for s_id, row in pred.iterrows():
+                    curves.setdefault(s_id, []).append(row[COLS].to_numpy(float))
+                print(f"[{name}] {a} -> {b} fold {k}", flush=True)
+                del model
+                torch.cuda.empty_cache()
+    oof = pd.DataFrame({s_id: np.mean(v, 0) for s_id, v in curves.items()}, index=COLS).T
+    folds = data.folds[data.folds.sample_id.isin(oof.index)]
+    metrics = save_experiment(name, {**cfg, "validation": f"cross-device {cameras[0]} <-> {cameras[1]}"},
+                              oof, data.labels, folds, compute, part=part)
+    print(f"[{name}] CV {metrics['cv_mean']:.2f} ± {metrics['cv_std']:.2f} ({len(oof)} samples)")
     return metrics
