@@ -1,0 +1,20 @@
+{
+  "name": "p3_mae_b_lpft_ctx100",
+  "part": "3",
+  "cv_mean": 41.138,
+  "cv_std": 14.462,
+  "oof_emd": 39.862,
+  "folds": [
+    63.147,
+    48.165,
+    25.026,
+    43.865,
+    25.488
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 1.796,
+    "gpu_hours": 1.796,
+    "peak_mem_gb": 5.923
+  }
+}
