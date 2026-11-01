@@ -35,6 +35,7 @@ DEFAULTS = dict(
     aug_flip=True, aug_rot90=True, aug_color=0.0, aug_scale=None, aug_blur=0.0,
     loss="emd", tta=True, seed=0, num_workers=4, amp=True, freeze_backbone=False,
     lp_epochs=0, lp_lr=1e-3, lora_r=0, init_weights=None,   # SSL tuning: LP-FT, LoRA, adapted weights
+    train_frac=1.0,                                          # data efficiency: share of training samples kept
 )
 
 
@@ -303,6 +304,9 @@ def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoi
                 continue
             seed_all(int(cfg["seed"] + k))
             tr, va = fold_of.index[fold_of != k].tolist(), fold_of.index[fold_of == k].tolist()
+            if cfg["train_frac"] < 1:  # same subsample for every model (seeded by fold only)
+                keep = max(2, int(round(cfg["train_frac"] * len(tr))))
+                tr = sorted(np.random.default_rng(1000 + k).choice(tr, keep, replace=False).tolist())
             model, hist = train_one(data, tr, cfg, device, val_ids=va)
             oof.append(predict_samples(model, data, va, "train", cfg, *model.mean_std, device))
             histories.append(hist.assign(fold=k))
@@ -320,6 +324,8 @@ def run_cv(name, cfg, part, folds_to_run=None, predict_test=False, save_checkpoi
             model, _ = train_one(data, fold_of.index.tolist(), cfg, device)
             test_ids = data.photos[data.photos.split == "test"].sample_id.unique()
             test_pred = predict_samples(model, data, test_ids, "test", cfg, *model.mean_std, device)
+            if save_checkpoints:
+                torch.save(model.state_dict(), paths.ROOT / "checkpoints" / name / "full.pt")
     oof = pd.concat(oof)
     data_folds = data.folds if folds_to_run is None else data.folds[data.folds.fold.isin(folds_to_run)]
     metrics = save_experiment(name, cfg, oof, data.labels, data_folds, compute, part=part)
