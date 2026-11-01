@@ -697,3 +697,22 @@ already tiny (std 0.3–0.7) and almost all the error is shared across seeds (th
 The pre-declared ensemble built from seed-averaged members scores 36.65 vs 36.39 with the seed-0 members.
 By the rule stated before this check (use seed averaging only if CV does not get worse), the final
 submission keeps the seed-0 members. The 0.26 difference is within the seed noise either way.
+
+---
+
+## Block C — colour: signal or transfer risk? (written before the runs)
+
+Context (Block 4): colour alone predicts 43.8; removing colour at inference costs ResNet-18 +11. Test photos
+come from other phones (iPhone 14/16) and other sites, so colour may not transfer.
+**Set-up.** ResNet-18 SGD (best CNN recipe), trained and evaluated with (a) no colour change, (b)
+*grey-world* white balance per photo (each channel scaled so the photo's mean is neutral grey; relative
+soil colour within the photo is kept), (c) greyscale. Two validations on the same site folds:
+*standard* CV, and *cross-device* CV (train only on photos of phone A, validate only on photos of phone B
+of the held-out samples; both directions Motorola Edge ↔ Samsung A52, curves averaged), which is the
+closest available simulation of the test shift.
+**Hypothesis.** Part of the colour signal is phone/lighting colour cast, which helps within a device
+mix and does not transfer across devices. White balance removes the cast but keeps the soil's own colour.
+**Prediction.** Cross-device CV is ≥ 3 worse than standard CV for the baseline. Grey-world loses ≤ 1.5 on
+standard CV and is ≥ 2 better than the baseline on cross-device CV. Greyscale is ≥ 5 worse than the
+baseline on standard CV and no better than grey-world cross-device.
+**Use.** This block is analysis: the final submission (rule fixed in Block 7) does not change.
