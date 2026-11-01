@@ -312,3 +312,34 @@ Nested early stopping improves ViT-S from 47.6 to ≤ 43, Swin-T from 44.3 to �
 Even so, no pretrained model beats the scratch ViT by more than 2. The early-epoch curves in
 Block 2 bottomed out at ~41–42, and nested selection is noisier than reading the minimum off the
 outer curve.
+
+---
+
+## Sanity block S — are we doing something wrong? (written before both runs)
+
+Context: every model family stops at CV ≈ 36–38 (best: scratch ViT 36.4, ResNet-18 SGD 37.9,
+texture ridge 38.2; ResNet-50 45.0). A classmate reports "mean validation EMD 17" with ResNet-50, and a
+public notebook reports frozen DINOv2-S + ridge = 34.7 where ours gives 49.0.
+
+### HS.1 — A leaky split explains numbers like 17
+**Hypothesis.** Each sample has 3–8 photos of the same tray. If photos, not samples, are split between
+train and validation, a network that can memorise a sample's appearance is validated on soils it was
+trained on. Our ResNet-50 already reaches EMD 16 on its *training* samples at epoch 6.
+**Prediction.** The exact ResNet-18 SGD recipe (CV 37.9 with site-grouped folds), re-run with a
+random 5-fold split of *photos*, scores ≤ 22 EMD (held-out photos aggregated per sample), i.e. at least
+15 points "better" than the honest number. The texture ridge, which cannot memorise, moved only from
+36.9 to 34.2 under the same leak (measured while writing this), so the gap is specific to
+high-capacity models.
+
+### HS.2 — Is our 50 mm / 224 px tiling too small for frozen pretrained ViTs?
+**Hypothesis (two competing explanations of 34.7 vs 49.0).**
+(a) Context: the public notebook feeds DINOv2 five 104 mm crops at 518 px (≈ 5 px/mm), so the
+model sees whole gravel clasts and the tray-scale arrangement; our 50 mm tiles at 224 px may be too
+small for features learned on object-centric images.
+(b) Validation: their folds are sample-grouped (not site), the fold seed was searched over 5000 seeds
+for balance, and ridge α was chosen on the same folds that are reported.
+**Prediction.** Reproducing their pipeline (5 × 104 mm crops at 518 px, CLS features, mean + std over
+crops per sample, ridge on √mass) on *our* site folds with *nested* α gives 42–46. That is better
+than our 49.0, but far from 34.7, so (b) explains more of the gap than (a). Their α picked on the outer
+folds is ≥ 2 more optimistic than nested α. If the context effect is ≥ 5 EMD, the ViT/SSL blocks are
+re-run with 100 mm tiles.
