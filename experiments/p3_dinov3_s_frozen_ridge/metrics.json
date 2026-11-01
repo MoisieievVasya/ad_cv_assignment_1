@@ -1,0 +1,21 @@
+{
+  "name": "p3_dinov3_s_frozen_ridge",
+  "part": "3",
+  "cv_mean": 45.819,
+  "cv_std": 15.973,
+  "oof_emd": 43.863,
+  "folds": [
+    66.191,
+    54.535,
+    23.577,
+    53.941,
+    30.853
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.001,
+    "gpu_hours": 0.001,
+    "peak_mem_gb": 0.018,
+    "feature_hours": 0.004
+  }
+}

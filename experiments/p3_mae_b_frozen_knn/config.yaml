@@ -1,0 +1,12 @@
+encoder: mae_b
+weights: pretrained
+tile_mm: 50
+input_px: 224
+features: CLS + mean patch token; sample = mean and std over tiles
+method: knn
+chosen_per_fold:
+- 5
+- 1
+- 3
+- 3
+- 1

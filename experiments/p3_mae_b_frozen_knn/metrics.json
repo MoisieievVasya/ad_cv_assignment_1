@@ -1,0 +1,21 @@
+{
+  "name": "p3_mae_b_frozen_knn",
+  "part": "3",
+  "cv_mean": 43.57,
+  "cv_std": 19.842,
+  "oof_emd": 40.746,
+  "folds": [
+    67.55,
+    64.298,
+    20.206,
+    42.646,
+    23.147
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.0001,
+    "gpu_hours": 0.0001,
+    "peak_mem_gb": 0.018,
+    "feature_hours": 0.005
+  }
+}
