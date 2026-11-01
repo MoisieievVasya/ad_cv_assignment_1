@@ -343,3 +343,14 @@ crops per sample, ridge on √mass) on *our* site folds with *nested* α gives 4
 than our 49.0, but far from 34.7, so (b) explains more of the gap than (a). Their α picked on the outer
 folds is ≥ 2 more optimistic than nested α. If the context effect is ≥ 5 EMD, the ViT/SSL blocks are
 re-run with 100 mm tiles.
+
+---
+
+## Block 6a — data efficiency (configs/p6/data_efficiency.yaml), written before the runs
+
+Best recipe per family so far: ResNet-18 SGD (37.9), own scratch ViT (36.4), DINOv3-S fine-tuned (42.2).
+**Hypothesis.** Pretraining is a data prior: the less labelled data, the more it should matter. The
+scratch ViT has no prior at all, so it should degrade fastest when training samples are removed.
+**Prediction.** With 50 % of each fold's training samples (≈ 9–10 samples): scratch ViT +6 to +10 EMD,
+ResNet-18 SGD +4 to +8, DINOv3-S FT +2 to +5. At 50 % the ranking flips and DINOv3-S FT is the best
+of the three. At 75 % all three move by less than half of their 50 % change.
