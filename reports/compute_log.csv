@@ -95,7 +95,9 @@ S,s_public_dinov2_sample_nested,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017
 S,s_public_dinov2_sample_outer_alpha,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
 S,s_public_dinov2_site_nested,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
 S,s_public_dinov2_site_outer_alpha,NVIDIA GeForce RTX 5070 Laptop GPU,0.0017,0.0017,0.247
+final,final_r18_sgd,NVIDIA GeForce RTX 5070 Laptop GPU,0.2686,0.2686,0.61
 final,final_tinyvit_scratch,NVIDIA GeForce RTX 5070 Laptop GPU,0.142,0.142,0.378
+final,final_vits,NVIDIA GeForce RTX 5070 Laptop GPU,0.4539,0.4539,1.531
 rep,rep_p2_tinyvit_scratch_s1,NVIDIA L4,0.1576,0.1576,0.388
 rep,rep_p2_tinyvit_scratch_s2,NVIDIA L4,0.1573,0.1573,0.388
 rep,rep_p3_dinov3_s_ft_s1,NVIDIA L4,0.3714,0.3714,1.853

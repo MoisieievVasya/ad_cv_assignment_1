@@ -135,7 +135,9 @@ Mean-curve baseline 93.4, uniform curve 102.
 
 | experiment | CV | OOF | public LB | private LB | GPU-h | device |
 |---|---|---|---|---|---|---|
+| final_r18_sgd | 36.51 ± 14.88 | 35.01 |  |  | 0.269 | NVIDIA GeForce RTX 5070 Laptop GPU |
 | final_tinyvit_scratch | 36.55 ± 14.77 | 35.20 |  |  | 0.142 | NVIDIA GeForce RTX 5070 Laptop GPU |
+| final_vits | 47.77 ± 19.10 | 44.42 |  |  | 0.454 | NVIDIA GeForce RTX 5070 Laptop GPU |
 
 ## Seed replicates (noise floor)
 

@@ -640,3 +640,49 @@ transfer risk to the test set (new sites, iPhones), and it explains why the pret
 depends least on colour (+2.5), is not hurt by greyscale. (3) The maps of the failures (H038 gravel under a
 fine surface, H616 clean sand) look like those of successes: nothing in the surface tells the model
 what is underneath. This is a limit of the input, not a shortcut.
+
+### Blocks 6a / 6b / 7 — results (`notebooks/06_comparison_ensemble.ipynb`)
+
+**6a — data efficiency.** 100 % / 75 % / 50 % of each fold's training samples: ResNet-18 SGD 37.9 / 45.4 /
+40.7; scratch ViT 36.4 / 45.9 / 45.3; DINOv3-S FT 42.2 / 48.6 / 48.6. Prediction (pretrained degrades least
+and wins at 50 %) **wrong**: all lose 4–9, the order stays, and the curve is not even monotone (ResNet-18 at
+50 % better than at 75 %). *Why:* with 19 training samples, *which* 4–9 samples are removed matters more than
+how many. The 50 % and 75 % subsets are different random draws per fold; losing the one coarse sample of
+a fold costs more than losing three fine ones. Data efficiency is not measurable at this size beyond
+"all models need every sample".
+
+**6b — scale robustness** (held-out photos, fold models):
+
+| | resolution ×1 | ×0.75 | ×0.5 | ×0.35 | px/mm error ×0.8 | ×1.25 |
+|---|---|---|---|---|---|---|
+| ResNet-18 SGD | 34.8 | 35.0 | 35.1 | 39.8 | 35.6 | 35.8 |
+| scratch ViT | 35.1 | 35.1 | 35.0 | 35.0 | 35.2 | 35.8 |
+| ViT-S | 44.4 | 44.2 | 43.1 | 41.5 | 43.5 | 45.2 |
+
+Predictions: (a) monotone degradation, ViT-S ≥ 5 worse at ×0.5 — **wrong**: nothing changes down to
+2.25 px/mm, ResNet-18 loses 5 only at 1.6 px/mm, ViT-S even improves; (b) a 25 % scale error costs
+5–12 — **wrong**: +0.4 to +1.0, although a pure shift of the true curve by 25 % costs 9.7.
+*Why:* this is the same finding as Block 4 from another angle. The models do not measure grain size at
+the 0.2–1 mm level; they rely on colour plus coarse texture statistics (which survive downsampling and a
+25 % rescale), and they predict close to the training mean whenever unsure. Robust to scale errors, but
+for the wrong reason: they hardly use scale at all.
+
+**Failures.** Per-sample EMD is dominated by three samples for *every* approach: H038 (114–143) and H037
+(87–103), gravel hidden under a fine surface layer, and H616 (65–81), the only clean sand. By group:
+gravelly 31–34, fine 33–44 (scratch ViT best on fine soils, 33.1; SSL models worst, 40–44). By device:
+Samsung photos are worse than Motorola photos for every model (ResNet-18 40.5 vs 36.8; scratch ViT 42.7
+vs 32.9). Samsung photos were downscaled by 5.8× vs 2.5× for Motorola, so they carry less detail and
+heavier JPEG artefacts.
+
+**7 — ensemble.** OOF per-sample error correlation is 0.75–0.96 overall (driven by H037/H038/H616). Without
+those three samples it is 0.34–0.49 between the scratch ViT and everything else, and 0.69–0.88 among the
+other models. Ensembles (CV): pre-declared diverse 4-model mean (texture ridge, ResNet-18 SGD, scratch ViT,
+DINOv2 frozen 100 mm) **36.39**; best single 36.51 (ResNet-18 SGD); two best singles 36.11; three trained nets
+38.81; all seven 39.65; greedy selection on the same OOF (optimistic) 35.75.
+Predictions: correlation ≥ 0.8 between trained models ✓ (0.77–0.92) and lowest with frozen DINOv2 ✗ (lowest
+with the scratch ViT); diverse ensemble 2–4 better than the best single **wrong** (−0.1); similar-model
+ensembles < 1 gain ✓. *Why:* the ensemble cannot fix errors every member shares, and the three
+shared failures make up ≈ 35 % of the total error. On the remaining samples averaging helps, but adding
+weaker members (ViT-S, DINOv3, MAE) costs more than their diversity gains.
+**Final submission (by CV, rule fixed before the leaderboard):** the pre-declared diverse ensemble (36.39 <
+36.51) **+ the extrapolation guard** (H6c), which changes only the Münster sample.

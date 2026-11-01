@@ -1,0 +1,16 @@
+{
+  "name": "cka_dinov2_s_lpft",
+  "part": "3",
+  "cv_mean": 64.547,
+  "cv_std": 0.0,
+  "oof_emd": 64.547,
+  "folds": [
+    64.547
+  ],
+  "compute": {
+    "device": "NVIDIA GeForce RTX 5070 Laptop GPU",
+    "hours": 0.0966,
+    "gpu_hours": 0.0966,
+    "peak_mem_gb": 2.022
+  }
+}

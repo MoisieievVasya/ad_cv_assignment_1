@@ -181,3 +181,21 @@ ids = pd.read_csv(paths.ROOT / "submissions" / f"{CAND[use[0]]}.csv").sample_id
 final = write_submission(pd.DataFrame(test, index=ids, columns=COLS), paths.ROOT / "submissions" / "final_ensemble.csv")
 print("final submission members:", use, f"-> CV {score(use)[0]:.2f}")
 display(final.round(1))
+
+# %% [markdown]
+# ### Extrapolation guard (H6c) on top of the final submission
+# The leave-coarsest-out check (H6c, `scripts/check_guard.py`) cleared the pre-declared bar, so the guard is
+# applied: it changes only test samples whose texture-scale centroid lies beyond the training range.
+
+# %%
+from soilgs.baselines import tile_feature_table
+from soilgs.guard import Guard
+
+tiles = tile_feature_table(photos, 50)
+cent = tiles.groupby(["split", "sample_id"]).dog_centroid.mean()
+guard = Guard().fit(cent.loc["train"].to_numpy(), lab.loc[cent.loc["train"].index, COLS].to_numpy(float))
+test_c = cent.loc["test"].loc[ids].to_numpy()
+guarded, w = guard.apply(test_c, test)
+print("guard weight per test sample:", dict(zip(ids, w.round(2))))
+final_g = write_submission(pd.DataFrame(guarded, index=ids, columns=COLS), paths.ROOT / "submissions" / "final_ensemble_guard.csv")
+display(final_g[w > 0].round(1))

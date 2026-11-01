@@ -13,7 +13,7 @@ cumulative % of mass passing 11 sieves (0.002–200 mm).
 | MAE-B, LP-FT (best SSL tuning) | 41.0 ± 15.3 | — |
 | DINOv2-S frozen, 100 mm crops + ridge (best frozen SSL) | 42.3 ± 15.9 | — |
 | hand-crafted mm-indexed texture + ridge | 38.2 ± 14.6 | — |
-| final ensemble | see [Part 7](#part-7--ensemble) | |
+| **final: diverse 4-model ensemble + extrapolation guard** | **36.39 ± 15.5** | |
 
 The ± is the std over the 5 site folds (fold difficulty), not noise: seed-to-seed std is 0.2–0.7, so
 differences under ~2 EMD between configurations are not effects. Leaderboard scores: [results table](reports/results_table.md).
@@ -200,7 +200,34 @@ training tiles with **scale-preserving views** vs **standard multi-crop**; CKA b
 ## Part 4 — interpretation and shortcut controls
 Notebook: `notebooks/04_interpretation.ipynb`; figure `reports/fig_maps.png`; controls `reports/controls_part4.csv`.
 
-PART4_RESULTS
+Maps for the same photos across the three approaches (two well-predicted samples and two failures):
+ResNet-18 Grad-CAM of the predicted coarseness, attention rollout for the scratch ViT, ViT-S and frozen DINOv2.
+
+![maps](reports/fig_maps.png)
+
+*What the maps show.* The CNN focuses on individual grains and clast edges/shadows. The scratch ViT is diffuse
+over the whole texture. ViT-S and DINOv2 attend to small bright specks, while large clasts stay *dark*. The tray
+frame is cropped away and no model attends to the tray border. The failures (H038: gravel hidden under a fine
+surface layer; H616: the only clean sand) look like the successes: the surface does not show what lies under it.
+
+**Control experiments** (held-out fold models, EMD without TTA; full table `reports/controls_part4.csv`):
+
+| input to the trained model | ResNet-18 SGD | scratch ViT | ViT-S |
+|---|---|---|---|
+| original | 34.8 | 35.1 | 44.4 |
+| each tile replaced by its mean colour (colour only) | +57.1 | +61.4 | +58.6 |
+| greyscale (texture only) | +11.4 | +15.7 | +2.5 |
+| tile shuffled in 4 × 4 / 8 × 8 pieces (12.5 / 6 mm) | +0.8 / +1.5 | +0.4 / +0.2 | −0.6 / +1.1 |
+| only central / only border tiles | −0.3 / +0.1 | +1.5 / −0.1 | −1.2 / +0.3 |
+
+Non-deep controls on the same folds: ridge on **6 Lab colour statistics alone = 43.8**, DoG texture alone 41.8,
+both 38.2; predicting the mean curve of the training samples taken with the same phone = 93.0 (= mean curve).
+
+*Conclusion.* No layout, tray-position or device shortcut: the models read local **texture statistics**, the
+quantity the hand-crafted features measure. **Colour is a strong signal** that the networks use jointly with texture.
+Removing it costs the CNN 11 and the scratch ViT 16 EMD, and colour alone is useless to them. Colour is physically
+related to the target (clay/silt, moisture) but is also what changes most between sites, phones and lighting, so it
+is the main transfer risk to the test set (new sites, iPhones).
 
 ## Part 5 — conclusions on optimisation
 * **What worked.** *CNN:* SGD instead of AdamW (−7.8), GroupNorm, smaller/no pretraining, lower resolution —
@@ -218,11 +245,71 @@ PART4_RESULTS
 ## Part 6 — comparison of approaches
 Notebook: `notebooks/06_comparison_ensemble.ipynb`; figures `reports/fig_scale_robustness.png`.
 
-PART6_RESULTS
+**One comparison table** (CV ± fold std; seed mean over 3 seeds where replicated; data efficiency = same recipe
+on 75 % / 50 % of each fold's training samples; GPU-hours of the whole 5-fold run):
+
+| approach | experiment | CV | 3 seeds | 75 % data | 50 % data | GPU-h | peak GB |
+|---|---|---|---|---|---|---|---|
+| hand-crafted texture + ridge | p0_texture_ridge_50mm | 38.2 ± 14.6 | — | — | — | CPU | — |
+| CNN: ResNet-18 SGD | p1_r18_sgd | 37.9 ± 15.1 | 37.9 ± 0.3 | 45.4 | 40.7 | 0.09 | 0.6 |
+| ViT: own ViT, scratch | p2_tinyvit_scratch | **36.4 ± 14.7** | 37.4 ± 0.7 | 45.9 | 45.3 | 0.09 | 0.4 |
+| ViT: ViT-S, nested early stop | p2_vits_nested | 39.6 ± 14.9 | — | — | — | 0.70 | 1.7 |
+| SSL: DINOv3-S fine-tuned | p3_dinov3_s_ft | 42.2 ± 17.0 | 41.9 ± 0.2 | 48.6 | 48.6 | 0.49 | 1.9 |
+| SSL: MAE-B LP-FT | p3_mae_b_lpft | 41.0 ± 15.3 | — | — | — | 0.88 | 3.8 |
+| SSL: DINOv2-S frozen, 100 mm | p3_dinov2_s_ctx100_frozen_ridge | 42.3 ± 15.9 | — | — | — | features only | — |
+
+Public / private leaderboard for every submitted model: [reports/results_table.md](reports/results_table.md).
+
+**Robustness to scale** (held-out photos through their fold model; left: the same photo at lower resolution with
+the correct px/mm; right: px/mm mis-stated by ±25 %):
+
+![scale robustness](reports/fig_scale_robustness.png)
+
+| | 4.5 px/mm | 3.4 | 2.25 | 1.6 | px/mm ×0.8 | ×1.25 |
+|---|---|---|---|---|---|---|
+| ResNet-18 SGD | 34.8 | 35.0 | 35.1 | 39.8 | 35.6 | 35.8 |
+| scratch ViT | 35.1 | 35.1 | 35.0 | 35.0 | 35.2 | 35.8 |
+| ViT-S | 44.4 | 44.2 | 43.1 | 41.5 | 43.5 | 45.2 |
+
+All models are almost insensitive to resolution and to a 25 % scale error, although a pure 25 % shift of the true
+curve costs 9.7 EMD. Like the Part 4 controls, this says the models do not measure grains at the 0.2–1 mm level:
+they use colour plus coarse texture statistics and fall back to the training mean when unsure. They are robust to
+scale, but because they barely use it.
+
+**Where each approach fails.** Three samples dominate the error of *every* approach: H038 (114–143 EMD) and H037
+(87–103), gravel hidden under a fine surface layer, and H616 (65–81), the only clean sand. By group: gravelly soils
+31–34, fine soils 33–44 (scratch ViT best on fine soils, SSL models worst). By device: Samsung photos are worse
+than Motorola photos for every model (ResNet-18 40.5 vs 36.8, scratch ViT 42.7 vs 32.9). The Samsung photos were
+downscaled 5.8× by the organisers vs 2.5× for Motorola. Data efficiency could not be measured meaningfully: with 19
+training samples, *which* samples are removed matters more than how many (non-monotone curves).
+
+**Soils outside the training range (the Münster test sample).** One test sample consists of 60–150 mm cobbles. Every
+model shrinks it towards the training mean (≈ 99 % passing 63 mm). A pre-declared **extrapolation guard** (H6c,
+`src/soilgs/guard.py`) predicts the curve's log-diameter quantiles from the texture-scale centroid with a linear model
+and blends it in only when a sample lies beyond the training range. In a leave-coarsest-out check on the 5 coarsest
+training samples it cut their EMD from 34–66 to 24–42 (mean −16, 5/5 improved), so it is part of the final submission.
+On the test set it changes only Münster (63 mm point: 99.5 → 26 % passing). Not used: SAM-based stone measurement
+calibrated on one sample (public notebook), which cannot be validated on CV.
 
 ## Part 7 — ensemble
 
-PART7_RESULTS
+Candidates must have both OOF curves and test predictions. Correlation of per-sample OOF errors
+(`reports/fig_error_correlation.png`): 0.75–0.96 overall, dominated by the shared failures. Without H037/H038/H616 it
+is 0.34–0.49 between the scratch ViT and every other model, and 0.69–0.88 among the others.
+
+| ensemble (equal-weight mean of curves) | CV |
+|---|---|
+| best single: ResNet-18 SGD / scratch ViT | 36.51 / 36.55 |
+| **pre-declared diverse: texture ridge + ResNet-18 SGD + scratch ViT + DINOv2 frozen 100 mm** | **36.39** |
+| two best singles | 36.11 |
+| trained nets only (ResNet-18, scratch ViT, ViT-S) | 38.81 |
+| all 7 candidates | 39.65 |
+| greedy selection on the same OOF (optimistic, not used) | 35.75 |
+
+The ensemble gains only 0.1 over the best single model (predicted 2–4). It cannot fix the errors every member shares
+(H037/H038/H616 ≈ 35 % of the total), and adding weaker members costs more than their diversity gains.
+**Final submission, chosen by CV with a rule fixed before any leaderboard score:** the pre-declared diverse ensemble +
+the extrapolation guard, `submissions/final_ensemble_guard.csv`.
 
 ## Sanity checks: are we doing something wrong?
 * *A classmate's "validation EMD 17" with ResNet-50* vs our 45: the same ResNet-18 recipe scores 25.2
