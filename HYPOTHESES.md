@@ -300,3 +300,15 @@ to overfit. The from-scratch *ResNet-18* result (Block 1, pending) is the matchi
 models on this dataset. Caveat: an epoch count read off these validation curves would be tuned on
 the outer folds (optimistic), so it will be tested as a new hypothesis with nested selection, not
 just applied.
+
+### H2.7 — Training length, chosen without peeking (configs/p2/nested_epochs.yaml)
+Written after Block 2 and before these runs; Part 3 tuning results were not yet known.
+**Hypothesis.** The Block 2 misses come from memorisation late in training. If the stopping epoch is
+chosen by an inner CV that never sees the outer fold, pretrained models keep most of their early
+(epoch 1–3) quality.
+**Prediction.** Chosen epochs are 1–4 for the pretrained models and ≥ 8 for the scratch ViT.
+Nested early stopping improves ViT-S from 47.6 to ≤ 43, Swin-T from 44.3 to ≤ 41, ResNet-18 AdamW from
+45.7 to ≤ 41, and DINOv2-S full fine-tuning likewise by ≥ 4. The scratch ViT changes by < 1.5.
+Even so, no pretrained model beats the scratch ViT by more than 2. The early-epoch curves in
+Block 2 bottomed out at ~41–42, and nested selection is noisier than reading the minimum off the
+outer curve.
