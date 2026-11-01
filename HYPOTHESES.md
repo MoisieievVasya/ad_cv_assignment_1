@@ -470,3 +470,24 @@ loses 5–12 EMD (a pure shift costs 9.7, H0.1, but models are less sensitive th
 H037/H038/H616 dominate), and lowest between a trained model and frozen DINOv2 at 100 mm (≤ 0.7).
 An equal-weight average of 3–4 models from different families beats the best single model by
 2–4 EMD. Adding the best-but-similar models (two ResNet-18 recipes) gains < 1.
+
+### H2.7 — results (nested early stopping; inner 3-fold site CV picks the stop epoch per outer fold)
+
+| Model | 15 epochs | nested stop | chosen epochs (5 folds) | Prediction | Verdict |
+|---|---|---|---|---|---|
+| ViT-S (IN-21k) | 47.6 | **39.6** | 8, 1, 1, 1, 4 | ≤ 43 | **Confirmed** (−8.0) |
+| DINOv2-S full FT | 45.5 | 42.4 | 1, 1, 2, 3, 8 | ≥ 4 better | Partly (−3.1) |
+| ResNet-18 AdamW | 45.7 | 43.9 | 4, 10, 2, 5, 5 | ≤ 41 | **Wrong** (−1.8) |
+| Swin-T | 44.3 | 46.7 | 3, 5, 2, 5, 7 | ≤ 41 | **Wrong** (+2.4) |
+| own scratch ViT | 36.4 | 36.8 | 5, 7, 2, 4, 4 | change < 1.5, epochs ≥ 8 | change confirmed, epochs **wrong** |
+
+No pretrained model beats the scratch ViT (prediction confirmed). Seed replicates of the reference
+recipes (repeats_top) put the run-to-run noise at ≈ 0.2–0.7 EMD std, and fold std is ≈ 15. So
+ViT-S's −8 is real, while DINOv2 −3.1, ResNet-18 −1.8 and Swin +2.4 are at the edge of the noise.
+**Why.** Plain ViT-S memorises fastest (Block 2: best epoch 3), so stopping early helps it most.
+The nested choice is itself noisy: an inner CV on ~19 samples / ~10 sites picks epochs between 1
+and 10 for the same model. Where the outer curve is flat (ResNet-18, Swin), that noise cancels
+the benefit. The scratch ViT does not overfit, so it does not care where it stops. Conclusion for the
+CNN/ViT recipe comparison: training length matters more than any other optimisation knob for
+pretrained *ViTs* on this dataset. For CNNs the SGD optimiser does a similar job (slower fitting:
+ResNet-18 SGD 37.9 without early stopping).
