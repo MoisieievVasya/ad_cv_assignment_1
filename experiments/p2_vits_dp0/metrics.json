@@ -1,0 +1,20 @@
+{
+  "name": "p2_vits_dp0",
+  "part": "2",
+  "cv_mean": 48.735,
+  "cv_std": 18.691,
+  "oof_emd": 45.427,
+  "folds": [
+    69.226,
+    69.737,
+    22.778,
+    47.729,
+    34.206
+  ],
+  "compute": {
+    "device": "NVIDIA A100-SXM4-40GB",
+    "hours": 0.2024,
+    "gpu_hours": 0.2024,
+    "peak_mem_gb": 1.527
+  }
+}
