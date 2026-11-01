@@ -16,7 +16,13 @@ from soilgs.train import run_cv
 
 
 def parse_value(v):
-    return yaml.safe_load(v)
+    value = yaml.safe_load(v)
+    if isinstance(value, str):  # YAML 1.1 reads "1e-5" (no dot) as a string
+        try:
+            return float(value)
+        except ValueError:
+            pass
+    return value
 
 
 def main():
