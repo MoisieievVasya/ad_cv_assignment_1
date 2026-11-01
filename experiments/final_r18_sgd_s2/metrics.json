@@ -1,0 +1,20 @@
+{
+  "name": "final_r18_sgd_s2",
+  "part": "final",
+  "cv_mean": 37.462,
+  "cv_std": 14.843,
+  "oof_emd": 36.188,
+  "folds": [
+    59.608,
+    45.792,
+    21.918,
+    39.709,
+    20.284
+  ],
+  "compute": {
+    "device": "NVIDIA L4",
+    "hours": 0.2023,
+    "gpu_hours": 0.2023,
+    "peak_mem_gb": 0.611
+  }
+}
