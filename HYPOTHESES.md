@@ -585,3 +585,16 @@ attention patterns change throughout the depth even with only 0.15 M trainable p
 starting from a fitted head with a 1e-5 LR, keeps the representation closest to the pretrained one,
 and it is the best DINOv2 tuning (43.1). That is the LP-FT argument: the less the features are
 distorted, the better on 19 samples.
+
+### H6c — an extrapolation guard for soils coarser than anything in training (written before the check)
+Context: the texture-scale centroid (DoG energy, log2 mm; correlation −0.91 with % < 2 mm) of one test
+sample (Münster, cobbles) is 1.50, far beyond the training maximum 0.86. Every regression model shrinks
+such a sample towards the training mean.
+**Rule (no test ids, decided now):** a one-feature model predicts the curve's quantiles in log-diameter
+from the centroid, so it *extrapolates linearly*. It is blended into the main prediction with weight
+w = clip((c − c_max,train) / 0.5, 0, 1); inside the training range w = 0, nothing changes.
+**Validation ("leave-coarsest-out").** For each of the 5 coarsest training samples, train only on samples
+whose centroid is ≥ 0.15 below it (so it is out of range, as Münster is), then compare its EMD from the
+texture ridge alone vs texture ridge + guard.
+**Prediction.** The guard improves those held-out samples by ≥ 3 EMD on average and on ≥ 3 of 5. If not,
+it is **not** used in the final submission.
